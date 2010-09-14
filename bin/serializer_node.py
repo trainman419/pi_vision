@@ -90,6 +90,12 @@ class SerializerROS():
                         self.sensors[sensor] = self.mySerializer.get_GP2D12(params['pin'])
                     elif params['type'] == "Voltage":
                         self.sensors[sensor] = self.mySerializer.voltage()
+                    elif params['type'] == "PhidgetsCurrent":
+                        self.sensors[sensor] = self.mySerializer.get_PhidgetsCurrent()
+                    elif params['type'] == "PhidgetsVoltage":
+                        self.sensors[sensor] = self.mySerializer.PhidgetsVoltage()
+                    elif params['type'] == "PhidgetsTemperature":
+                        self.sensors[sensor] = self.mySerializer.PhidgetsTemperature()
                     else:
                         self.sensors[sensor] = self.mySerializer.get_analog(params['pin'])
                         
