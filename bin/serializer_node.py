@@ -40,18 +40,24 @@ class SerializerROS():
             self.analog_sensors = dict({})
             self.digital_sensors = dict({})
             self.sensors = rospy.get_param("~sensors", dict({}))
-            self.analog_sensors = self.sensors['analog']
-            self.digital_sensors = self.sensors['digital']
+            try:
+                self.analog_sensors = self.sensors['analog']
+                self.digital_sensors = self.sensors['digital']
+            except:
+                pass
             
             self.sensors = dict({})
             self.msg = SensorState()
         
             print "Publishing Sensors:"
-            for sensor, params in self.analog_sensors.iteritems():
-                print sensor, params
-                
-            for sensor, params in self.digital_sensors.iteritems():
-                print sensor, params
+            try:
+                for sensor, params in self.analog_sensors.iteritems():
+                    print sensor, params
+                    
+                for sensor, params in self.digital_sensors.iteritems():
+                    print sensor, params
+            except:
+                pass
             
             # The SensorState publisher
             self.sensorStatePub = rospy.Publisher('sensors', SensorState)
@@ -117,7 +123,7 @@ class SerializerROS():
                
                 self.msg.header.frame_id = "sensors"
                 self.msg.header.stamp = rospy.Time.now()
-                self.msg.header.seq += 1
+                #self.msg.header.seq += 1
                 
                 rospy.loginfo(self.msg)
                 self.sensorStatePub.publish(self.msg)
