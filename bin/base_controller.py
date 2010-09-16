@@ -33,6 +33,8 @@ from geometry_msgs.msg import Pose
 from nav_msgs.msg import Odometry
 from tf.broadcaster import TransformBroadcaster
 
+import random
+
 class base_controller(Thread):
     """ Controller to handle movement & odometry feedback for a differential 
             drive mobile base. """
@@ -65,9 +67,10 @@ class base_controller(Thread):
         rospy.loginfo("Started Base Controller '"+ name +"' for a base of " + str(self.wheel_track) + "m wide with " + str(self.ticks_meter) + " ticks per meter")
 
     def run(self):
-        r = rospy.Rate(self.rate)
+        rosRate = rospy.Rate(self.rate)
+        
         while not rospy.is_shutdown():
-            r.sleep()
+            rosRate.sleep()
             now = datetime.now()
             elapsed = now - self.then
             self.then = now
@@ -125,7 +128,7 @@ class base_controller(Thread):
             odom.pose.pose.orientation = quaternion
 
             odom.child_frame_id = "base_link"
-            odom.twist.twist.linear.x = delta_x
+            odom.twist.twist.linear.x = delta_x + random.uniform(-1, 1)
             odom.twist.twist.linear.y = 0
             odom.twist.twist.angular.z = delta_th
             
@@ -157,7 +160,7 @@ class base_controller(Thread):
             #r = x + th * (d + self.wheel_track/2.0)
 
         # Log motion.                  
-        rospy.loginfo("Twist move: " + str(left) + ", " + str(right))
+        #rospy.loginfo("Twist move: " + str(left) + ", " + str(right))
         
         # Set motor speeds in meters per second.
         rospy.loginfo("")

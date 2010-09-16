@@ -38,6 +38,7 @@ import serial
 import threading
 import math
 import os
+import time
 from serial.serialutil import SerialException
 
 class Serializer():  
@@ -846,7 +847,8 @@ class Serializer():
                 revs_per_second = float(v) / (self.wheel_diameter * math.pi * 2.54 / 100)
             ticks_per_loop = revs_per_second * self.encoder_resolution * self.loop_interval * self.gear_reduction
             spd.append(int(ticks_per_loop))
-                                                    
+        
+        print "MOGO!", time.time()                                   
         return self.execute_ack('mogo %s' %' '.join(map(lambda x: '%d:%d' %x, zip(id, spd))))
         
     def travel_at_speed(self, id, vel):
@@ -1009,8 +1011,8 @@ class GP2D12():
 if __name__ == "__main__":
     import time
     if os.name == "posix":
-        #portName = "/dev/ttyUSB0"
-        portName = "/dev/rfcomm0" # For bluetooth on Linux
+        portName = "/dev/ttyUSB0"
+        #portName = "/dev/rfcomm0" # For bluetooth on Linux
         # Note: On Linux, after connecting to the Bluetooth adapter, run the command
         # sudo rfcomm bind /dev/rfcomm0
     else:

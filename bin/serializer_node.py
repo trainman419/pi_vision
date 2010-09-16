@@ -125,7 +125,7 @@ class SerializerROS():
                 self.msg.header.stamp = rospy.Time.now()
                 #self.msg.header.seq += 1
                 
-                rospy.loginfo(self.msg)
+                #rospy.loginfo(self.msg)
                 self.sensorStatePub.publish(self.msg)
                 self.rate.sleep()
             else:
@@ -165,7 +165,38 @@ class SerializerROS():
     
     def PhidgetsCurrentHandler(self, req):
         return PhidgetsCurrentResponse(self.mySerializer.get_PhidgetsCurrent(req.pin, req.cached))
-            
+
+    def cmdVelCallback(self, req):
+        """ Handle velocity-based movement requests. """
+        x = req.linear.x        # m/s
+        th = req.angular.z      # rad/s
+
+        if x == 0:
+            # Turn in place
+            right = th * self.wheel_track  * self.gear_reduction / 2.0
+            if th == 0:
+                left = right
+            else:
+                left = -right
+        elif th == 0:   
+            # Pure forward/backward motion
+            left = right = x
+        else:
+            # Rotation about a point in space
+            left = x - th * self.wheel_track  * self.gear_reduction / 2.0
+            right = x + th * self.wheel_track  * self.gear_reduction / 2.0
+            #d = x/th
+            #l = x + th * (d - self.wheel_track/2.0)
+            #r = x + th * (d + self.wheel_track/2.0)
+
+        # Log motion.                  
+        #rospy.loginfo("Twist move: " + str(left) + ", " + str(right))
+        
+        # Set motor speeds in meters per second.
+        rospy.loginfo("")
+        self.Serializer.mogo_m_per_s([1, 2], [left, right])
+        
+           
 if __name__ == '__main__':
     try:
         mySerializer = SerializerROS()
