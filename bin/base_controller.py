@@ -22,7 +22,7 @@
 import roslib; roslib.load_manifest('serializer')
 import rospy
 
-from threading import Thread
+from threading import Thread, Event
 
 from math import sin,cos,pi
 from datetime import datetime
@@ -40,7 +40,7 @@ class base_controller(Thread):
             drive mobile base. """
     def __init__(self, Serializer, name):
         Thread.__init__ (self)
-
+        self.finished = Event()
         # Handle for the Serializer
         self.Serializer = Serializer
 
@@ -69,71 +69,71 @@ class base_controller(Thread):
     def run(self):
         rosRate = rospy.Rate(self.rate)
         
-        while not rospy.is_shutdown():
+        while not rospy.is_shutdown() and not self.finished.isSet():
             rosRate.sleep()
-            now = datetime.now()
-            elapsed = now - self.then
-            self.then = now
-            elapsed = float(elapsed.seconds) + elapsed.microseconds/1000000.
-
-            # read encoders
-            try:
-                left, right = self.Serializer.get_encoder_count([1, 2])
-            except:
-                rospy.logerr("Could not update encoders")
-                continue
-            #rospy.loginfo("Encoders: " + str(left) +","+ str(right))
-
-            # calculate odometry
-            delta_left = (left - self.enc_left) / self.ticks_meter
-            delta_right = (right - self.enc_right) / self.ticks_meter
-            self.enc_left = left
-            self.enc_right = right
-
-            delta_x_ave = (delta_left + delta_right)/ 2
-            th = (delta_right - delta_left) / self.wheel_track
-            delta_x = delta_x_ave / elapsed
-            delta_th = th / elapsed
-
-            if (delta_x_ave != 0):
-                x = cos(th) * delta_x_ave
-                y = -sin(th) * delta_x_ave
-                self.x = self.x + (cos(self.th) * x - sin(self.th) * y)
-                self.y = self.y + (sin(self.th) * x + cos(self.th) * y)
-
-            if (th != 0):
-                self.th = self.th + th
-
-            quaternion = Quaternion()
-            quaternion.x = 0.0 
-            quaternion.y = 0.0
-            quaternion.z = sin(self.th / 2)
-            quaternion.w = cos(self.th / 2)
-
-            # Create the odometry transform frame broadcaster.
-            self.odomBroadcaster.sendTransform(
-                (self.x, self.y, 0), 
-                (quaternion.x, quaternion.y, quaternion.z, quaternion.w),
-                rospy.Time.now(),
-                "base_link",
-                "odom"
-                )
-
-            odom = Odometry()
-            odom.header.frame_id = "odom"
-            odom.header.stamp = rospy.Time.now()
-            odom.pose.pose.position.x = self.x
-            odom.pose.pose.position.y = self.y
-            odom.pose.pose.position.z = 0
-            odom.pose.pose.orientation = quaternion
-
-            odom.child_frame_id = "base_link"
-            odom.twist.twist.linear.x = delta_x + random.uniform(-1, 1)
-            odom.twist.twist.linear.y = 0
-            odom.twist.twist.angular.z = delta_th
-            
-            #rospy.loginfo(odom.header)
-            self.odomPub.publish(odom)
+#            now = datetime.now()
+#            elapsed = now - self.then
+#            self.then = now
+#            elapsed = float(elapsed.seconds) + elapsed.microseconds/1000000.
+#
+#            # read encoders
+#            try:
+#                left, right = self.Serializer.get_encoder_count([1, 2])
+#            except:
+#                rospy.logerr("Could not update encoders")
+#                continue
+#            #rospy.loginfo("Encoders: " + str(left) +","+ str(right))
+#
+#            # calculate odometry
+#            delta_left = (left - self.enc_left) / self.ticks_meter
+#            delta_right = (right - self.enc_right) / self.ticks_meter
+#            self.enc_left = left
+#            self.enc_right = right
+#
+#            delta_x_ave = (delta_left + delta_right)/ 2
+#            th = (delta_right - delta_left) / self.wheel_track
+#            delta_x = delta_x_ave / elapsed
+#            delta_th = th / elapsed
+#
+#            if (delta_x_ave != 0):
+#                x = cos(th) * delta_x_ave
+#                y = -sin(th) * delta_x_ave
+#                self.x = self.x + (cos(self.th) * x - sin(self.th) * y)
+#                self.y = self.y + (sin(self.th) * x + cos(self.th) * y)
+#
+#            if (th != 0):
+#                self.th = self.th + th
+#
+#            quaternion = Quaternion()
+#            quaternion.x = 0.0 
+#            quaternion.y = 0.0
+#            quaternion.z = sin(self.th / 2)
+#            quaternion.w = cos(self.th / 2)
+#
+#            # Create the odometry transform frame broadcaster.
+#            self.odomBroadcaster.sendTransform(
+#                (self.x, self.y, 0), 
+#                (quaternion.x, quaternion.y, quaternion.z, quaternion.w),
+#                rospy.Time.now(),
+#                "base_link",
+#                "odom"
+#                )
+#
+#            odom = Odometry()
+#            odom.header.frame_id = "odom"
+#            odom.header.stamp = rospy.Time.now()
+#            odom.pose.pose.position.x = self.x
+#            odom.pose.pose.position.y = self.y
+#            odom.pose.pose.position.z = 0
+#            odom.pose.pose.orientation = quaternion
+#
+#            odom.child_frame_id = "base_link"
+#            odom.twist.twist.linear.x = delta_x + random.uniform(-1, 1)
+#            odom.twist.twist.linear.y = 0
+#            odom.twist.twist.angular.z = delta_th
+#            
+#            #rospy.loginfo(odom.header)
+#            self.odomPub.publish(odom)
             
 
     def cmdVelCallback(self, req):
@@ -165,6 +165,11 @@ class base_controller(Thread):
         # Set motor speeds in meters per second.
         rospy.loginfo("")
         self.Serializer.mogo_m_per_s([1, 2], [left, right])
+        
+    def stop(self):
+        print "Shutting down base controller"
+        self.finished.set()
+        self.join()
         
 #    def cmdPoseCallback(self, req):
 #        """ Handle pose-based movement requests. """

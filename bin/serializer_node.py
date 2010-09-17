@@ -25,6 +25,7 @@ import serializer_driver as SerializerAPI
 from serializer.msg import SensorState
 from serializer.srv import *
 from base_controller import *
+from geometry_msgs.msg import Twist
 
 class SerializerROS():
     def __init__(self):
@@ -42,9 +43,13 @@ class SerializerROS():
             self.sensors = rospy.get_param("~sensors", dict({}))
             try:
                 self.analog_sensors = self.sensors['analog']
+            except:
+                pass
+            try:
                 self.digital_sensors = self.sensors['digital']
             except:
                 pass
+
             
             self.sensors = dict({})
             self.msg = SensorState()
@@ -53,7 +58,9 @@ class SerializerROS():
             try:
                 for sensor, params in self.analog_sensors.iteritems():
                     print sensor, params
-                    
+            except:
+                pass  
+            try:      
                 for sensor, params in self.digital_sensors.iteritems():
                     print sensor, params
             except:
@@ -61,6 +68,9 @@ class SerializerROS():
             
             # The SensorState publisher
             self.sensorStatePub = rospy.Publisher('sensors', SensorState)
+        
+        # Subscribe to the velocity command topic so we can control the drive motors.
+        #rospy.Subscriber('cmd_vel', Twist, self.cmdVelCallback)
         
         # The Serializer services.
         rospy.Service('SetServo', SetServo ,self.SetServoHandler)
@@ -97,11 +107,11 @@ class SerializerROS():
                     elif params['type'] == "Voltage":
                         self.sensors[sensor] = self.mySerializer.voltage()
                     elif params['type'] == "PhidgetsCurrent":
-                        self.sensors[sensor] = self.mySerializer.get_PhidgetsCurrent()
+                        self.sensors[sensor] = self.mySerializer.get_PhidgetsCurrent(params['pin'])
                     elif params['type'] == "PhidgetsVoltage":
-                        self.sensors[sensor] = self.mySerializer.PhidgetsVoltage()
+                        self.sensors[sensor] = self.mySerializer.PhidgetsVoltage(params['pin'])
                     elif params['type'] == "PhidgetsTemperature":
-                        self.sensors[sensor] = self.mySerializer.PhidgetsTemperature()
+                        self.sensors[sensor] = self.mySerializer.PhidgetsTemperature(params['pin'])
                     else:
                         self.sensors[sensor] = self.mySerializer.get_analog(params['pin'])
                         
@@ -117,7 +127,7 @@ class SerializerROS():
                 for sensor, value in self.sensors.iteritems():
                     self.msg.name.append(sensor)
                     try:
-                        self.msg.value.append(round(float(value), 2))
+                        self.msg.value.append(round(value, 1))
                     except:
                         self.msg.value.append(value)
                
@@ -173,7 +183,7 @@ class SerializerROS():
 
         if x == 0:
             # Turn in place
-            right = th * self.wheel_track  * self.gear_reduction / 2.0
+            right = th * self.mySerializer.wheel_track  * self.mySerializer.gear_reduction / 2.0
             if th == 0:
                 left = right
             else:
@@ -183,8 +193,8 @@ class SerializerROS():
             left = right = x
         else:
             # Rotation about a point in space
-            left = x - th * self.wheel_track  * self.gear_reduction / 2.0
-            right = x + th * self.wheel_track  * self.gear_reduction / 2.0
+            left = x - th * self.mySerializer.wheel_track  * self.mySerializer.gear_reduction / 2.0
+            right = x + th * self.mySerializer.wheel_track  * self.mySerializer.gear_reduction / 2.0
             #d = x/th
             #l = x + th * (d - self.wheel_track/2.0)
             #r = x + th * (d + self.wheel_track/2.0)
@@ -193,11 +203,13 @@ class SerializerROS():
         #rospy.loginfo("Twist move: " + str(left) + ", " + str(right))
         
         # Set motor speeds in meters per second.
-        rospy.loginfo("")
-        self.Serializer.mogo_m_per_s([1, 2], [left, right])
+        msg = "Left: " + str(left) + " Right: " + str(right)
+        rospy.loginfo(msg)
+        self.mySerializer.mogo_m_per_s([1, 2], [left, right])
         
            
 if __name__ == '__main__':
     try:
         mySerializer = SerializerROS()
-    except rospy.ROSInterruptException: pass
+    except rospy.ROSInterruptException:
+        self.base.stop()

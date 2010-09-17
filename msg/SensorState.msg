@@ -1,4 +1,4 @@
 Header header
 
 string[] name
-float64[] value
+float32[] value
