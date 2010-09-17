@@ -36,7 +36,7 @@ class SerializerROS():
         self.publish_sensors = rospy.get_param("~publish_sensors", True)
         self.timeout = rospy.get_param("~timeout", "0.05")
                 
-        rospy.loginfo("Started Serializer on port " + self.port)
+        rospy.loginfo("Started Serializer on port " + self.port + " at " + str(self.baud))
         
         if self.publish_sensors:
             self.analog_sensors = dict({})
@@ -132,7 +132,7 @@ class SerializerROS():
                     except:
                         self.msg.value.append(value)
                  
-                all_analog_sensors = self.mySerializer.sensor([1,2,3,4,5])       
+#                all_analog_sensors = self.mySerializer.sensor([1,2,3,4,5])       
 #                left_encoder, right_encoder = self.mySerializer.get_encoder_count([1, 2])
 #                self.msg.name.append("left_encoder")
 #                self.msg.name.append("right_encoder")

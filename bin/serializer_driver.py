@@ -209,11 +209,7 @@ class Serializer():
                 if cmd.find("mogo") != -1:
                     print "CMD", cmd
                 self.port.write(cmd + '\r')
-                if cmd.find("mogo") != -1:
-                    print "RECV"
                 ack = self.recv()
-                if cmd.find("mogo") != -1:
-                    print "ACK?", ack
                 return ack == 'ACK'
             except:
                 print "execute_ack exception when executing", cmd
@@ -327,7 +323,6 @@ class Serializer():
             raw mode.  In raw mode, srf04, srf05, pping, and maxez1 return
             reading in units of 0.4us. srf08 and srf10 return readings of 1us.
             The cfg units command without a parameter returns the value
-            currently stored in EEPROM.
         '''
         self.units = units
         return self.execute_int('cfg units %d' %units);
@@ -340,7 +335,11 @@ class Serializer():
             counts for channel A are used for internal VPID and DPID algorithms.
         '''
         if type(id) == int: id=[id]
-        return self.execute_array('getenc %s' %' '.join(map(str, id)))
+        values = self.execute_array('getenc %s' %' '.join(map(str, id)))
+        print "IDS", id, "VALUES", values
+        if len(values) != len(id):
+            print "Encoder count did not match ID count for ids", id
+        return values
 
     def clear_encoder(self, id):
         ''' Usage 1: clear_encoder(id)
@@ -533,7 +532,7 @@ class Serializer():
             values = self.execute_array('sensor %s' %' '.join(map(str, id)))
         n = len(values)
         if n != len(id):
-            print "Returning Cached Values"
+            print "Array size incorrect: returning cached values for sensors", id
             return self.analog_sensor_cache
         try:
             for i in range(n):
@@ -543,7 +542,8 @@ class Serializer():
             else:
                 return values
         except:
-            print "ID", id, "Values", values
+            print "Exception reading analog sensors: returning cached values for sensors", id
+            return self.analog_sensor_cache
         
     def get_analog(self, id):
         return self.sensor(id)
@@ -1059,7 +1059,7 @@ if __name__ == "__main__":
     else:
         portName = "COM12" # Windows style COM port.
         
-    baudRate = 19200
+    baudRate = 57600
   
     mySerializer = Serializer(port=portName, baudrate=baudRate, timeout=0.05)
     mySerializer.connect()
@@ -1072,9 +1072,9 @@ if __name__ == "__main__":
     print "Voltage", mySerializer.voltage()
     
     while True:
-        #print mySerializer.sensor([0, 1, 2, 3, 4, 5])
+        print mySerializer.sensor([0, 1, 2, 3, 4, 5])
         print mySerializer.get_encoder_count([1, 2])
-        time.sleep(0.5)
+        time.sleep(0.05)
 #        mySerializer.mogo_m_per_s([1, 2], [-0.05, 0.05])
 #        time.sleep(3)
 #        mySerializer.mogo_m_per_s([1, 2], [0.05, -0.05])
