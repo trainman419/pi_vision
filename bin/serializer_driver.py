@@ -533,7 +533,8 @@ class Serializer():
             values = self.execute_array('sensor %s' %' '.join(map(str, id)))
         n = len(values)
         if n != len(id):
-            pass
+            print "Returning Cached Values"
+            return self.analog_sensor_cache
         try:
             for i in range(n):
                 self.update_analog_cache(id[i], values[i])
@@ -1071,8 +1072,9 @@ if __name__ == "__main__":
     print "Voltage", mySerializer.voltage()
     
     while True:
-        mySerializer.sensor([0, 1, 2, 3, 4, 5])
-        time.sleep(0.05)
+        #print mySerializer.sensor([0, 1, 2, 3, 4, 5])
+        print mySerializer.get_encoder_count([1, 2])
+        time.sleep(0.5)
 #        mySerializer.mogo_m_per_s([1, 2], [-0.05, 0.05])
 #        time.sleep(3)
 #        mySerializer.mogo_m_per_s([1, 2], [0.05, -0.05])
