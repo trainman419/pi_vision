@@ -178,11 +178,11 @@ class Serializer():
         '''
         with self.messageLock:
             try:
-                self.port.flushInput()
+                #self.port.flushInput()
                 self.port.write(cmd + '\r')
                 return (self.port.readline(eol='>')[0:-3]).strip()
             except:
-                print "execute exception"
+                print "execute exception when executing", cmd
                 print sys.exc_info()
                 pass
 
@@ -193,9 +193,10 @@ class Serializer():
             try:
                 self.port.flushInput()
                 self.port.write(cmd + '\r')
-                return map(int, self.recv().split())
+                values = self.recv().split()
+                return map(int, values)
             except:
-                print "execute_array exception", cmd
+                print "execute_array exception when executing", cmd
                 print sys.exc_info()
                 return []
         
@@ -215,7 +216,7 @@ class Serializer():
                     print "ACK?", ack
                 return ack == 'ACK'
             except:
-                print "execute_ack exception"
+                print "execute_ack exception when executing", cmd
                 print sys.exc_info() 
         
     def execute_int(self, cmd):
@@ -227,7 +228,7 @@ class Serializer():
                 self.port.write(cmd + '\r')
                 return self.recv_int()
             except:
-                print "execute_int exception"
+                print "execute_int exception when executing", cmd
                 print sys.exc_info()
                 
     def update_digital_cache(self, id, value):
@@ -531,6 +532,8 @@ class Serializer():
         else:
             values = self.execute_array('sensor %s' %' '.join(map(str, id)))
         n = len(values)
+        if n != len(id):
+            pass
         try:
             for i in range(n):
                 self.update_analog_cache(id[i], values[i])
@@ -1055,7 +1058,7 @@ if __name__ == "__main__":
     else:
         portName = "COM12" # Windows style COM port.
         
-    baudRate = 57600
+    baudRate = 19200
   
     mySerializer = Serializer(port=portName, baudrate=baudRate, timeout=0.05)
     mySerializer.connect()
@@ -1068,10 +1071,12 @@ if __name__ == "__main__":
     print "Voltage", mySerializer.voltage()
     
     while True:
-        mySerializer.mogo_m_per_s([1, 2], [-0.05, 0.05])
-        time.sleep(3)
-        mySerializer.mogo_m_per_s([1, 2], [0.05, -0.05])
-        time.sleep(3)
+        mySerializer.sensor([0, 1, 2, 3, 4, 5])
+        time.sleep(0.05)
+#        mySerializer.mogo_m_per_s([1, 2], [-0.05, 0.05])
+#        time.sleep(3)
+#        mySerializer.mogo_m_per_s([1, 2], [0.05, -0.05])
+#        time.sleep(3)
     
     print "Connection test successful, now shutting down...",
     

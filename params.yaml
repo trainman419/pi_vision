@@ -1,6 +1,7 @@
 port: /dev/ttyUSB0
 #port: /dev/rfcomm0
-baud: 57600
+baud: 19200
+timeout: 0.05
 rate: 15
 wheel_diameter: 0.127
 wheel_track: 0.325
@@ -13,11 +14,11 @@ VPID_D: 5
 VPID_L: 45
 DPID_P: 1
 DPID_I: 0
-DPID_D: 0kill %11
+DPID_D: 0
 DPID_A: 5
 DPID_B: 5
 
-publish_sensors: False
+publish_sensors: True
 
 sensors: {
     'analog': { 'head_ir': {'pin': 4, 'type': 'GP2D12'}, 'voltage': {'pin': 5, 'type': 'Voltage'}, 'drive_current': {'pin': 1, 'type': 'PhidgetsCurrent'} },

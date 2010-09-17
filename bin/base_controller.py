@@ -68,6 +68,7 @@ class base_controller(Thread):
 
     def run(self):
         rosRate = rospy.Rate(self.rate)
+        print "ROS RATE:", self.rate
         
         while not rospy.is_shutdown() and not self.finished.isSet():
             rosRate.sleep()

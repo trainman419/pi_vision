@@ -34,6 +34,7 @@ class SerializerROS():
         self.baud = int(rospy.get_param("~baud", "19200"))
         self.rate = int(rospy.get_param("~rate", "10"))
         self.publish_sensors = rospy.get_param("~publish_sensors", True)
+        self.timeout = rospy.get_param("~timeout", "0.05")
                 
         rospy.loginfo("Started Serializer on port " + self.port)
         
@@ -87,7 +88,7 @@ class SerializerROS():
         self.rate = rospy.Rate(self.rate)
         
         # Initialize the Serializer driver
-        self.mySerializer = SerializerAPI.Serializer(self.port, self.baud)
+        self.mySerializer = SerializerAPI.Serializer(self.port, self.baud, self.timeout)
         self.mySerializer.connect()
         self.mySerializer.units = rospy.get_param("~units", 0)
         self.mySerializer.gear_reduction = rospy.get_param("~gear_reduction", 1.667)
@@ -130,6 +131,13 @@ class SerializerROS():
                         self.msg.value.append(round(value, 1))
                     except:
                         self.msg.value.append(value)
+                 
+                all_analog_sensors = self.mySerializer.sensor([1,2,3,4,5])       
+#                left_encoder, right_encoder = self.mySerializer.get_encoder_count([1, 2])
+#                self.msg.name.append("left_encoder")
+#                self.msg.name.append("right_encoder")
+#                self.msg.value.append(left_encoder)
+#                self.msg.value.append(right_encoder)
                
                 self.msg.header.frame_id = "sensors"
                 self.msg.header.stamp = rospy.Time.now()
