@@ -67,7 +67,7 @@ class base_controller(Thread):
         rospy.loginfo("Started Base Controller '"+ name +"' for a base of " + str(self.wheel_track) + "m wide with " + str(self.ticks_meter) + " ticks per meter")
 
     def run(self):
-        self.rate = 1.0
+        self.rate = 5.0
         rosRate = rospy.Rate(self.rate)
         print "Base controller update rate:", self.rate
         
@@ -84,15 +84,15 @@ class base_controller(Thread):
             except:
                 rospy.logerr("Could not update encoders")
                 continue
-            #rospy.loginfo("Encoders: " + str(left) +","+ str(right))
-
+            
             # calculate odometry
-            delta_left = (left - self.enc_left) / self.ticks_meter
-            delta_right = (right - self.enc_right) / self.ticks_meter
+            delta_left = float((left - self.enc_left)) / self.ticks_meter
+            delta_right = float((right - self.enc_right)) / self.ticks_meter
+            
             self.enc_left = left
             self.enc_right = right
-
-            delta_x_ave = (delta_left + delta_right)/ 2
+            
+            delta_x_ave = (delta_left + delta_right) / 2
             th = (delta_right - delta_left) / self.wheel_track
             delta_x = delta_x_ave / elapsed
             delta_th = th / elapsed
@@ -130,11 +130,11 @@ class base_controller(Thread):
             odom.pose.pose.orientation = quaternion
 
             odom.child_frame_id = "base_link"
-            odom.twist.twist.linear.x = delta_x + random.uniform(-1, 1)
+            odom.twist.twist.linear.x = delta_x
             odom.twist.twist.linear.y = 0
             odom.twist.twist.angular.z = delta_th
             
-            #rospy.loginfo(odom.header)
+            #rospy.loginfo(odom)
             self.odomPub.publish(odom)
             
 
@@ -165,7 +165,7 @@ class base_controller(Thread):
         #rospy.loginfo("Twist move: " + str(left) + ", " + str(right))
         
         # Set motor speeds in meters per second.
-        rospy.loginfo("")
+        #rospy.loginfo("")
         self.mySerializer.mogo_m_per_s([1, 2], [left, right])
         
     def stop(self):

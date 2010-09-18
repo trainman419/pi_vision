@@ -150,14 +150,14 @@ class SerializerROS():
                         self.sensors[sensor] = self.mySerializer.PhidgetsTemperature(params['pin'])
                     else:
                         self.sensors[sensor] = self.mySerializer.get_analog(params['pin'])
-                    time.sleep(0.01)
+                    self.rate.sleep()
                         
                 for sensor, params in self.digital_sensors.iteritems():
                     if params['type'] == "Ping":
                         self.sensors[sensor] = self.mySerializer.get_Ping(params['pin'])
                     else:
                         self.sensors[sensor] = self.mySerializer.get_io(params['pin'])
-                    time.sleep(0.01)
+                    self.rate.sleep()
 
 #                self.sensors['head_sonar'] = self.mySerializer.get_Ping(4)
 #                time.sleep(0.05)
@@ -169,12 +169,9 @@ class SerializerROS():
                 for sensor, value in self.sensors.iteritems():
                     self.msg.name.append(sensor)
                     try:
-                        self.msg.value.append(round(float(value), 1))
+                        self.msg.value.append(round(value, 1))
                     except:
-                        try:
-                            self.msg.value.append(float(value))
-                        except:
-                            self.msg.value.append(-999.0)
+                        self.msg.value.append(value)
                  
 #                all_analog_sensors = self.mySerializer.sensor([1,2,3,4,5])       
 #                left_encoder, right_encoder = self.mySerializer.get_encoder_count([1, 2])
@@ -187,8 +184,11 @@ class SerializerROS():
                 #self.msg.header.stamp = rospy.Time.now()
                 #self.msg.header.seq += 1
                 
-                #rospy.loginfo(self.msg)
-                self.sensorStatePub.publish(self.msg)
+                rospy.loginfo(self.msg)
+                try:
+                    self.sensorStatePub.publish(self.msg)
+                except:
+                    pass
                 self.rate.sleep()
             else:
                 rospy.spin()
