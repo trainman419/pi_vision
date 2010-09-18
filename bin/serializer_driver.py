@@ -69,6 +69,8 @@ class Serializer():
     
     INIT_PID = False # Set to True if you want to update UNITS, VPID and DPID parameters.  Otherwise, those stored in the Serializer's firmware are used.**
     
+    BAD_VALUE = -999
+    
     def __init__(self, port="/dev/ttyUSB0", baudrate=57600, timeout=0.05): 
         self.port = port
         self.baudrate = baudrate
@@ -206,8 +208,8 @@ class Serializer():
         with self.messageLock:
             try:
                 self.port.flushInput()
-                if cmd.find("mogo") != -1:
-                    print "CMD", cmd
+#                if cmd.find("mogo") != -1:
+#                    print "CMD", cmd
                 self.port.write(cmd + '\r')
                 ack = self.recv()
                 return ack == 'ACK'
@@ -336,7 +338,7 @@ class Serializer():
         '''
         if type(id) == int: id=[id]
         values = self.execute_array('getenc %s' %' '.join(map(str, id)))
-        print "IDS", id, "VALUES", values
+        #print "IDS", id, "VALUES", values
         if len(values) != len(id):
             print "Encoder count did not match ID count for ids", id
         return values
@@ -535,6 +537,9 @@ class Serializer():
             print "Array size incorrect: returning cached values for sensors", id
             return self.analog_sensor_cache
         try:
+            for i in range(n):
+                if values[i] == None:
+                    values[i] = self.BAD_VALUE
             for i in range(n):
                 self.update_analog_cache(id[i], values[i])
             if n == 1:
@@ -806,21 +811,26 @@ class Serializer():
             value = self.analog_sensor_cache[pin]
         else:
             value = self.sensor(pin)
-        tempC = (value - 200.) / 4.
-        if self.temp_units == "C":
-            return tempC
-        else:
-            return 9. * tempC / 5. + 32.
+        try:
+            tempC = (value - 200.) / 4.
+            if self.temp_units == "C":
+                return tempC
+            else:
+                return 9. * tempC / 5. + 32.
+        except:
+            return self.BAD_VALUE
         
     def get_PhidgetsVoltage(self, pin, cached=False):
         ''' Get the voltage from a Phidgets Voltage sensor on an analog sensor port.
         '''
-        
         if cached:
             value = self.analog_sensor_cache[pin]
         else:
             value = self.sensor(pin)
-        return 0.06 * (value - 500.)
+        try:
+            return 0.06 * (value - 500.)
+        except:
+            return self.BAD_VALUE
     
     def get_PhidgetsCurrent(self, pin, cached=False, model=20, ac_dc="dc"):
         if cached:
@@ -839,7 +849,7 @@ class Serializer():
                 else:
                     return 0.625 * value
         except:
-            pass
+            return self.BAD_VALUE
          
     def travel_distance(self, dist, vel):
         ''' Move forward or backward 'dist' (inches or meters depending on units) at speed 'vel'.  Use negative distances
@@ -889,7 +899,7 @@ class Serializer():
             ticks_per_loop = revs_per_second * self.encoder_resolution * self.loop_interval * self.gear_reduction
             spd.append(int(ticks_per_loop))
         
-        print "MOGO!", time.time()                                   
+        #print "MOGO!", time.time()                                   
         return self.execute_ack('mogo %s' %' '.join(map(lambda x: '%d:%d' %x, zip(id, spd))))
         
     def travel_at_speed(self, id, vel):
@@ -928,7 +938,7 @@ class Serializer():
             vel = vel / 180. * math.pi
             
         # Check that the user does not mistaken degrees for radians.
-        if vel > 1.0:
+        if vel > 2.0:
             print "That is a rather high rotation rate. Are you sure you specified rotation velocity in the correct units?"
             print "Degrees per second for English units and radians per second for metric."
             print "Keep in mind that 1 radian per second is about 60 degrees per second."
@@ -1074,7 +1084,7 @@ if __name__ == "__main__":
     while True:
         print mySerializer.sensor([0, 1, 2, 3, 4, 5])
         print mySerializer.get_encoder_count([1, 2])
-        time.sleep(0.05)
+        time.sleep(0.5)
 #        mySerializer.mogo_m_per_s([1, 2], [-0.05, 0.05])
 #        time.sleep(3)
 #        mySerializer.mogo_m_per_s([1, 2], [0.05, -0.05])

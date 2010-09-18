@@ -143,7 +143,7 @@ class SerializerROS():
                 self.msg.header.stamp = rospy.Time.now()
                 #self.msg.header.seq += 1
                 
-                #rospy.loginfo(self.msg)
+                rospy.loginfo(self.msg)
                 self.sensorStatePub.publish(self.msg)
                 self.rate.sleep()
             else:
