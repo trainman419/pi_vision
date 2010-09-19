@@ -65,7 +65,7 @@ class Serializer():
     DPID_I = 0  # Integral
     DPID_D = 0  # Derivative 
     DPID_A = 5  # Acceleration
-    DPID_B = 5  # Dead band
+    DPID_B = 10  # Dead band
     
     MILLISECONDS_PER_PID_LOOP = 1.6 # Do not change this!  It is a fixed property of the Serializer PID controller.
     LOOP_INTERVAL = VPID_L * MILLISECONDS_PER_PID_LOOP / 1000 # in seconds
@@ -74,7 +74,7 @@ class Serializer():
     
     BAD_VALUE = -999
     
-    def __init__(self, port="/dev/ttyUSB0", baudrate=57600, timeout=0.05): 
+    def __init__(self, port="/dev/ttyUSB0", baudrate=57600, timeout=0.5): 
         self.port = port
         self.baudrate = baudrate
         self.timeout = timeout
@@ -132,7 +132,6 @@ class Serializer():
         '''
         with self.messageLock:
             self.port.open()
-            print self.recv()
 
     def close(self): 
         ''' Close the serial port.
@@ -147,12 +146,11 @@ class Serializer():
         self.port.write(cmd + '\r')
 
     def recv(self):
-        ''' This command should not be used on its own: it is called by the execute commands
-           
+        ''' This command should not be used on its own: it is called by the execute commands   
             below in a thread safe manner.
         '''
-        values = (self.port.readline(eol='>')[0:-3]).strip()
-        return values
+        value = (self.port.readline(eol='>')[0:-3]).strip()
+        return value
             
     def recv_ack(self):
         ''' This command should not be used on its own: it is called by the execute commands
@@ -165,11 +163,8 @@ class Serializer():
         ''' This command should not be used on its own: it is called by the execute commands
             below in a thread safe manner.
         '''
-        msg = self.recv()
-        try:
-            return int(msg)
-        except:
-            return msg
+        value = self.recv()
+        return int(value)
 
     def recv_array(self):
         ''' This command should not be used on its own: it is called by the execute commands
@@ -187,10 +182,10 @@ class Serializer():
             try:
                 self.port.flushInput()
             except:
-                print "Can't flush!"
+                pass
             try:
                 self.port.write(cmd + '\r')
-                values = (self.port.readline(eol='>')[0:-3]).strip()
+                values = self.recv()
             except:
                 print "execute exception when executing", cmd
                 print sys.exc_info()
@@ -207,7 +202,7 @@ class Serializer():
                 pass
             try:
                 self.port.write(cmd + '\r')
-                values = self.recv().split()
+                values = self.recv_array()
             except:
                 print "execute_array exception when executing", cmd
                 print sys.exc_info()
@@ -219,14 +214,8 @@ class Serializer():
         '''
         with self.messageLock:
             try:
-                self.port.flushInput()
-            except:
-                print "Can't flush!"
-            try:
-                print "CMD:", cmd
                 self.port.write(cmd + '\r')
                 ack = self.recv()
-                print "ACK?", ack
             except:
                 print "execute_ack exception when executing", cmd
                 print sys.exc_info()
@@ -243,12 +232,15 @@ class Serializer():
                 pass
             try:
                 self.port.write(cmd + '\r')
-                value = self.recv_int()
+                value = self.recv()
+                while value == '' or value == 'NACK':
+                    self.port.write(cmd + '\r')
+                    value = self.recv()
             except:
                 print "execute_int exception when executing", cmd
                 print sys.exc_info()
-                return None
-        return value
+                value = None
+        return int(value)
                 
     def update_digital_cache(self, id, value):
         with self.messageLock:
@@ -348,7 +340,7 @@ class Serializer():
             The cfg units command without a parameter returns the value
         '''
         self.units = units
-        return self.execute_int('cfg units %d' %units);
+        return self.execute_ack('cfg units %d' %units);
 
     def get_encoder_count(self, id):
         ''' Usage 1: get_encoder_count(id)
@@ -762,7 +754,9 @@ class Serializer():
     def voltage(self, cached=False):
         if cached:
             try:
-                return self.analog_sensor_cache[5] * 15. / 1024.
+                print "Trying..."
+                value = self.analog_sensor_cache[5] * 15. / 1024.
+                print "Should not see this", value
             except:
                 try:
                     value = self.sensor(5) * 15. / 1024.
@@ -771,9 +765,10 @@ class Serializer():
                     pass
         else:
             try:
-               return self.sensor(5) * 15. / 1024.
+               value = self.sensor(5) * 15. / 1024.
             except:
-                pass 
+                pass
+        return value
         
     def set_wheel_diameter(self, diameter):
         self.wheel_diameter = diameter
@@ -1100,7 +1095,7 @@ if __name__ == "__main__":
         
     baudRate = 57600
   
-    mySerializer = Serializer(port=portName, baudrate=baudRate, timeout=0.05)
+    mySerializer = Serializer(port=portName, baudrate=baudRate, timeout=0.5)
     mySerializer.connect()
     
     print "Firmware Version", mySerializer.fw()
@@ -1111,23 +1106,12 @@ if __name__ == "__main__":
     print "Encoder ticks per meter", mySerializer.ticks_per_meter
     print "Voltage", mySerializer.voltage()
     
+    mySerializer.travel_distance(-1, 0.2)
     start = datetime.now()
-    mySerializer.travel_distance(1, 0.1)
     while mySerializer.get_pids():
-        time.sleep(0.1)
+        time.sleep(0.05)
     elapsed = datetime.now() - start
     print "Elapsed time", float(elapsed.seconds) + elapsed.microseconds/1000000.
-        
-    
-    #while True:
-        #print mySerializer.get_analog(4)
-        #print mySerializer.sensor([0, 1, 2, 3, 4, 5])
-        #print mySerializer.get_encoder_count([1, 2])
-        #time.sleep(0.01)
-#        mySerializer.mogo_m_per_s([1, 2], [-0.05, 0.05])
-#        time.sleep(3)
-#        mySerializer.mogo_m_per_s([1, 2], [0.05, -0.05])
-#        time.sleep(3)
     
     print "Connection test successful, now shutting down...",
     
