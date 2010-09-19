@@ -55,8 +55,12 @@ class base_controller(Thread):
         self.enc_right = 0
         self.x = 0                  # position in xy plane
         self.y = 0
-        self.th = 0
-        self.then = datetime.now()  # time for determining dx/dy
+        self.th = 0                 # rotation in radians
+        self.vx = 0                 # linear velocity
+        self.vy = 0
+        self.vth = 0                # angular velocity
+        self.ticks = 0
+        self.then = rospy.Time.now()  # time for determining dx/dy
 
         # subscriptions
         rospy.Subscriber("cmd_vel", Twist, self.cmdVelCallback)
@@ -73,10 +77,9 @@ class base_controller(Thread):
         
         while not rospy.is_shutdown() and not self.finished.isSet():
             rosRate.sleep()
-            now = datetime.now()
-            elapsed = now - self.then
+            now = rospy.Time.now()
+            dt = (now - self.then).to_sec()
             self.then = now
-            elapsed = float(elapsed.seconds) + elapsed.microseconds/1000000.
 
             # read encoders
             try:
@@ -85,32 +88,37 @@ class base_controller(Thread):
                 rospy.logerr("Could not update encoders")
                 continue
             
+            self.ticks += ((left - self.enc_left) + (right - self.enc_right)) / 2
+            
+            if self.ticks != 0:
+                print "Ticks:", self.ticks
+            
             # calculate odometry
-            delta_left = float((left - self.enc_left)) / self.ticks_meter
-            delta_right = float((right - self.enc_right)) / self.ticks_meter
+            dleft = float((left - self.enc_left)) / self.ticks_meter
+            dright = float((right - self.enc_right)) / self.ticks_meter
             
             self.enc_left = left
             self.enc_right = right
             
-            delta_x_ave = (delta_left + delta_right) / 2
-            th = (delta_right - delta_left) / self.wheel_track
-            delta_x = delta_x_ave / elapsed
-            delta_th = th / elapsed
+            dxy_ave = (dleft + dright) / 2.0
+            dth = (dright - dleft) / self.wheel_track
+            vxy = dxy_ave / dt
+            vth = dth / dt
 
-            if (delta_x_ave != 0):
-                x = cos(th) * delta_x_ave
-                y = -sin(th) * delta_x_ave
-                self.x = self.x + (cos(self.th) * x - sin(self.th) * y)
-                self.y = self.y + (sin(self.th) * x + cos(self.th) * y)
+            if (dxy_ave != 0):
+                dx = cos(dth) * dxy_ave
+                dy = -sin(dth) * dxy_ave
+                self.x += (cos(self.th) * dx - sin(self.th) * dy)
+                self.y += (sin(self.th) * dx + cos(self.th) * dy)
 
-            if (th != 0):
-                self.th = self.th + th
+            if (dth != 0):
+                self.th += dth
 
             quaternion = Quaternion()
             quaternion.x = 0.0 
             quaternion.y = 0.0
-            quaternion.z = sin(self.th / 2)
-            quaternion.w = cos(self.th / 2)
+            quaternion.z = sin(self.th / 2.0)
+            quaternion.w = cos(self.th / 2.0)
 
             # Create the odometry transform frame broadcaster.
             self.odomBroadcaster.sendTransform(
@@ -130,9 +138,9 @@ class base_controller(Thread):
             odom.pose.pose.orientation = quaternion
 
             odom.child_frame_id = "base_link"
-            odom.twist.twist.linear.x = delta_x
+            odom.twist.twist.linear.x = vxy
             odom.twist.twist.linear.y = 0
-            odom.twist.twist.angular.z = delta_th
+            odom.twist.twist.angular.z = vth
             
             #rospy.loginfo(odom)
             self.odomPub.publish(odom)

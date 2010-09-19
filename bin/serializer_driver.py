@@ -48,12 +48,13 @@ class Serializer():
     N_ANALOG_PORTS = 6
     N_DIGITAL_PORTS = 12
     UNITS = 0                   # 1 is inches, 0 is metric (cm for sensors, meters for wheels measurements) and 2 is "raw"
-    WHEEL_DIAMETER = 0.127      # meters (5.0 inches) meters or inches depending on UNITS
+    WHEEL_DIAMETER = 0.132      # meters (5.0 inches) meters or inches depending on UNITS
     WHEEL_TRACK = 0.325         # meters (12.8 inches) meters or inches units depending on UNITS
     ENCODER_RESOLUTION = 624    # encoder ticks per revolution of the wheel without external gears
     GEAR_REDUCTION = 1.667      # This is for external gearing if you have any.
     
     ENCODER_TYPE = 1            # 1 = quadrature, 0 = single
+    MOTORS_REVERSED = True      # Multiplies encoder counts by -1 if the motor rotation direction is reversed.
 
     VPID_P = 2  # Proportional
     VPID_I = 0  # Integral
@@ -108,9 +109,9 @@ class Serializer():
                 [self.DPID_P, self.DPID_I, self.DPID_D, self.DPID_A, self.DPID_B] = self.get_dpid()
                 
             if self.units == 0:
-                self.ticks_per_meter = int(self.encoder_resolution / (self.wheel_diameter * math.pi))
+                self.ticks_per_meter = int(self.encoder_resolution * self.gear_reduction  / (self.wheel_diameter * math.pi))
             elif self.units == 1:
-                self.ticks_per_meter = int(self.encoder_resolution / (self.wheel_diameter * math.pi * 2.54 / 100.0))
+                self.ticks_per_meter = int(self.encoder_resolution * self.gear_reduction / (self.wheel_diameter * math.pi * 2.54 / 100.0))
                     
             self.loop_interval = self.VPID_L * self.MILLISECONDS_PER_PID_LOOP / 1000
 
@@ -186,7 +187,7 @@ class Serializer():
             try:
                 self.port.flushInput()
             except:
-                pass
+                print "Can't flush!"
             try:
                 self.port.write(cmd + '\r')
                 values = (self.port.readline(eol='>')[0:-3]).strip()
@@ -222,8 +223,10 @@ class Serializer():
             except:
                 print "Can't flush!"
             try:
+                print "CMD:", cmd
                 self.port.write(cmd + '\r')
                 ack = self.recv()
+                print "ACK?", ack
             except:
                 print "execute_ack exception when executing", cmd
                 print sys.exc_info()
@@ -356,9 +359,14 @@ class Serializer():
         '''
         if type(id) == int: id=[id]
         values = self.execute_array('getenc %s' %' '.join(map(str, id)))
+
         #print "ENCODER IDS", id, "VALUES", values
         if len(values) != len(id):
             print "Encoder count did not match ID count for ids", id
+        else:
+            if self.MOTORS_REVERSED:
+                for i in range(len(id)):
+                    values[i] = -1 * values[i]          
         return values
 
     def clear_encoder(self, id):
@@ -418,7 +426,7 @@ class Serializer():
     def stop(self):
         ''' Stop both motors.
         '''
-        return self.execute('stop')
+        return self.execute_ack('stop')
 
     def get_vpid(self):
         ''' Get the PIDL parameter values.
@@ -873,14 +881,15 @@ class Serializer():
         ''' Move forward or backward 'dist' (inches or meters depending on units) at speed 'vel'.  Use negative distances
             to move backward.
         '''
-
         revs_per_second = float(vel) / (self.wheel_diameter * math.pi)
             
-        ticks_per_loop = revs_per_second * self.encoder_resolution * self.loop_interval
-        vel = (int(ticks_per_loop))
+        ticks_per_loop = revs_per_second * self.encoder_resolution / self.loop_interval
+        vel = (int(ticks_per_loop / self.VPID_P))
             
         revs = dist / (self.wheel_diameter * math.pi)
         ticks = revs * self.encoder_resolution * self.gear_reduction
+        if self.MOTORS_REVERSED:
+            ticks = -ticks
         self.digo([1, 2], [ticks, ticks], [vel, vel])
         
     def mogo(self, id, vel):
@@ -1080,6 +1089,7 @@ class GP2D12():
 """ Basic test for connectivity """
 if __name__ == "__main__":
     import time
+    from datetime import datetime
     if os.name == "posix":
         portName = "/dev/ttyUSB0"
         #portName = "/dev/rfcomm0" # For bluetooth on Linux
@@ -1098,13 +1108,22 @@ if __name__ == "__main__":
     print "Baudrate", mySerializer.get_baud()
     print "VPID", mySerializer.get_vpid()
     print "DPID", mySerializer.get_dpid()
+    print "Encoder ticks per meter", mySerializer.ticks_per_meter
     print "Voltage", mySerializer.voltage()
     
-    while True:
-        print mySerializer.get_analog(4)
+    start = datetime.now()
+    mySerializer.travel_distance(1, 0.1)
+    while mySerializer.get_pids():
+        time.sleep(0.1)
+    elapsed = datetime.now() - start
+    print "Elapsed time", float(elapsed.seconds) + elapsed.microseconds/1000000.
+        
+    
+    #while True:
+        #print mySerializer.get_analog(4)
         #print mySerializer.sensor([0, 1, 2, 3, 4, 5])
         #print mySerializer.get_encoder_count([1, 2])
-        time.sleep(0.01)
+        #time.sleep(0.01)
 #        mySerializer.mogo_m_per_s([1, 2], [-0.05, 0.05])
 #        time.sleep(3)
 #        mySerializer.mogo_m_per_s([1, 2], [0.05, -0.05])
