@@ -56,15 +56,15 @@ class Serializer():
     ENCODER_TYPE = 1            # 1 = quadrature, 0 = single
     MOTORS_REVERSED = True      # Multiplies encoder counts by -1 if the motor rotation direction is reversed.
 
-    VPID_P = 2  # Proportional
-    VPID_I = 0  # Integral
-    VPID_D = 5  # Derivative                                                                               
-    VPID_L = 45 # Loop: this together with UNITS and WHEEL_DIAMETER determines real-world velocity
+    VPID_P = 2   # Proportional
+    VPID_I = 0   # Integral
+    VPID_D = 5   # Derivative                                                                               
+    VPID_L = 45  # Loop: this together with UNITS and WHEEL_DIAMETER determines real-world velocity
     
-    DPID_P = 1  # Proportional
-    DPID_I = 0  # Integral
-    DPID_D = 0  # Derivative 
-    DPID_A = 5  # Acceleration
+    DPID_P = 1   # Proportional
+    DPID_I = 0   # Integral
+    DPID_D = 0   # Derivative 
+    DPID_A = 5   # Acceleration
     DPID_B = 10  # Dead band
     
     MILLISECONDS_PER_PID_LOOP = 1.6 # Do not change this!  It is a fixed property of the Serializer PID controller.
@@ -96,10 +96,13 @@ class Serializer():
         try:
             print "Connecting to Serializer on port", self.port, "..."
             self.port = serial.Serial(port=self.port, baudrate=self.baudrate, timeout=self.timeout, writeTimeout=self.timeout)
-            if self.get_baud() != self.baudrate:
+            time.sleep(1)
+            self.port.write('cfg baud\r')
+            test = (self.port.readline(eol='>')[0:-3]).strip()
+            if test != str(self.baudrate):       
                 raise SerialException
             print "Connected at", self.baudrate, "baud."
-            
+
             # Take care of the UNITS, VPID and DPID parameters for PID drive control.
             if self.INIT_PID:
                 self.init_PID()
@@ -171,9 +174,12 @@ class Serializer():
             below in a thread safe manner.
         '''
         try:
-            return map(int, self.recv().split())
+            values = self.recv().split()
+            return map(int, values)
         except:
-            return []
+#            print "execute exception when doing a recv_array"
+#            print sys.exc_info() 
+            return None
 
     def execute(self, cmd):
         ''' Thread safe execution of "cmd" on the SerializerTM returning a single value.
@@ -181,16 +187,22 @@ class Serializer():
         with self.messageLock:
             try:
                 self.port.flushInput()
+                self.port.flushOutput()
             except:
                 pass
             try:
                 self.port.write(cmd + '\r')
-                values = self.recv()
+                value = self.recv()
+                while value == '' or value == 'NACK':
+                    self.port.flushInput()
+                    self.port.flushOutput()
+                    self.port.write(cmd + '\r')
+                    value = self.recv()
             except:
-                print "execute exception when executing", cmd
-                print sys.exc_info()
+#                print "execute exception when executing", cmd
+#                print sys.exc_info()
                 return None
-        return values
+        return value
 
     def execute_array(self, cmd):
         ''' Thread safe execution of "cmd" on the SerializerTM returning an array.
@@ -198,28 +210,48 @@ class Serializer():
         with self.messageLock:
             try:
                 self.port.flushInput()
+                self.port.flushOutput()
             except:
-                pass
+                print "Can't flush array!"
             try:
                 self.port.write(cmd + '\r')
                 values = self.recv_array()
+                while values == '' or values == 'NACK' or values == []:
+                    self.port.flushInput()
+                    self.port.flushOutput()
+                    self.port.write(cmd + '\r')
+                    values = self.recv_array()
             except:
-                print "execute_array exception when executing", cmd
-                print sys.exc_info()
-                return None
-        return map(int, values)
+                return []
+#                print "execute_array exception when executing", cmd
+#                print sys.exc_info()
+#                return None
+        try:
+            return map(int, values)
+        except:
+            return []
         
     def execute_ack(self, cmd):
         ''' Thread safe execution of "cmd" on the SerializerTM returning True if response is ACK.
         '''
         with self.messageLock:
             try:
+                self.port.flushInput()
+                self.port.flushOutput()
+            except:
+                pass
+            try:
                 self.port.write(cmd + '\r')
                 ack = self.recv()
+                while ack == '' or ack == 'NACK':
+                    self.port.flushInput()
+                    self.port.flushOutput()
+                    self.port.write(cmd + '\r')
+                    ack = self.recv()
             except:
                 print "execute_ack exception when executing", cmd
                 print sys.exc_info()
-                return None
+                return 0
         return ack == 'ACK'
         
     def execute_int(self, cmd):
@@ -228,18 +260,21 @@ class Serializer():
         with self.messageLock:
             try:
                 self.port.flushInput()
+                self.port.flushOutput()
             except:
                 pass
             try:
                 self.port.write(cmd + '\r')
                 value = self.recv()
                 while value == '' or value == 'NACK':
+                    self.port.flushInput()
+                    self.port.flushOutput()
                     self.port.write(cmd + '\r')
                     value = self.recv()
             except:
                 print "execute_int exception when executing", cmd
                 print sys.exc_info()
-                value = None
+                return None
         return int(value)
                 
     def update_digital_cache(self, id, value):
@@ -330,7 +365,7 @@ class Serializer():
             raw mode.  In raw mode, srf04, srf05, pping, and maxez1 return
             reading in units of 0.4us. srf08 and srf10 return readings of 1us..
         '''
-        return int(self.execute('cfg units'))
+        return self.execute_int('cfg units')
 
     def set_units(self, units):
         ''' The set_units command sets the internal units used for sensor
@@ -355,6 +390,7 @@ class Serializer():
         #print "ENCODER IDS", id, "VALUES", values
         if len(values) != len(id):
             print "Encoder count did not match ID count for ids", id
+            print "Values", values
         else:
             if self.MOTORS_REVERSED:
                 for i in range(len(id)):
@@ -545,11 +581,8 @@ class Serializer():
             battery voltage, simply multiply the value returned by Sensor 5 by 
             15/1028.
         '''
-        if type(id) == int:
-            values = [self.execute_int('sensor %d' %id)]
-            id = [id]
-        else:
-            values = self.execute_array('sensor %s' %' '.join(map(str, id)))
+        if type(id) == int: id = [id]
+        values = self.execute_array('sensor %s' %' '.join(map(str, id)))
         n = len(values)
         if n != len(id):
             print "Array size incorrect: returning cached values for sensors", id
@@ -677,7 +710,7 @@ class Serializer():
             The tpa81 command queries a Devantech TPA81 thermopile sensor for
             temperature values. It returns 8 temperature values.
         '''
-        return self.execute('tpa81 0x%X' %i2caddr if i2caddr else 'tpa81')
+        return self.execute_array('tpa81 0x%X' %i2caddr if i2caddr else 'tpa81')
 
     def vel(self):
         ''' The vel command returns the left and right wheel velocities. The
@@ -754,20 +787,18 @@ class Serializer():
     def voltage(self, cached=False):
         if cached:
             try:
-                print "Trying..."
                 value = self.analog_sensor_cache[5] * 15. / 1024.
-                print "Should not see this", value
             except:
                 try:
                     value = self.sensor(5) * 15. / 1024.
                     self.update_analog_cache(5, value)
                 except:
-                    pass
+                    return None
         else:
             try:
-               value = self.sensor(5) * 15. / 1024.
+                value = self.sensor(5) * 15. / 1024.
             except:
-                pass
+                return None
         return value
         
     def set_wheel_diameter(self, diameter):
@@ -1106,12 +1137,18 @@ if __name__ == "__main__":
     print "Encoder ticks per meter", mySerializer.ticks_per_meter
     print "Voltage", mySerializer.voltage()
     
-    mySerializer.travel_distance(-1, 0.2)
-    start = datetime.now()
-    while mySerializer.get_pids():
+    while True:
+        print mySerializer.get_all_analog()
         time.sleep(0.05)
-    elapsed = datetime.now() - start
-    print "Elapsed time", float(elapsed.seconds) + elapsed.microseconds/1000000.
+        print mySerializer.get_encoder_count([1, 2])
+        time.sleep(0.05)
+    
+#    mySerializer.travel_distance(-1, 0.2)
+#    start = datetime.now()
+#    while mySerializer.get_pids():
+#        time.sleep(0.05)
+#    elapsed = datetime.now() - start
+#    print "Elapsed time", float(elapsed.seconds) + elapsed.microseconds/1000000.
     
     print "Connection test successful, now shutting down...",
     

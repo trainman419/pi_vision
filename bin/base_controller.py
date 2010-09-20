@@ -90,9 +90,6 @@ class base_controller(Thread):
             
             self.ticks += ((left - self.enc_left) + (right - self.enc_right)) / 2
             
-            if self.ticks != 0:
-                print "Ticks:", self.ticks
-            
             # calculate odometry
             dleft = float((left - self.enc_left)) / self.ticks_meter
             dright = float((right - self.enc_right)) / self.ticks_meter
@@ -174,6 +171,9 @@ class base_controller(Thread):
         
         # Set motor speeds in meters per second.
         #rospy.loginfo("")
+        if self.mySerializer.MOTORS_REVERSED:
+            left = -left
+            right = -right
         self.mySerializer.mogo_m_per_s([1, 2], [left, right])
         
     def stop(self):

@@ -2,9 +2,9 @@ port: /dev/ttyUSB0
 #port: /dev/rfcomm0
 baud: 57600
 timeout: 0.05
-rate: 20
-wheel_diameter: 0.127
-wheel_track: 0.325
+rate: 15
+wheel_diameter: 0.132
+wheel_track: 0.3365
 encoder_resolution: 624
 gear_reduction: 1.667
 units: 0
