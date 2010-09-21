@@ -46,21 +46,18 @@ class base_controller(Thread):
 
         # Parameters
         self.rate = float(rospy.get_param("~rate", 10.0))
-        self.ticks_meter = self.mySerializer.ticks_per_meter
-        self.wheel_track = self.mySerializer.wheel_track
-        self.gear_reduction = self.mySerializer.gear_reduction
+        self.ticks_meter = float(self.mySerializer.ticks_per_meter)
+        self.wheel_track = float(self.mySerializer.wheel_track)
+        self.gear_reduction = float(self.mySerializer.gear_reduction)
         
         # internal data        
-        self.enc_left = 0           # encoder readings
+        self.enc_left = 0            # encoder readings
         self.enc_right = 0
-        self.x = 0                  # position in xy plane
-        self.y = 0
-        self.th = 0                 # rotation in radians
-        self.vx = 0                 # linear velocity
-        self.vy = 0
-        self.vth = 0                # angular velocity
+        self.x = 0.                  # position in xy plane
+        self.y = 0.
+        self.th = 0.                 # rotation in radians
         self.ticks = 0
-        self.then = rospy.Time.now()  # time for determining dx/dy
+        self.then = rospy.Time.now() # time for determining dx/dy
 
         # subscriptions
         rospy.Subscriber("cmd_vel", Twist, self.cmdVelCallback)
@@ -91,8 +88,8 @@ class base_controller(Thread):
             self.ticks += ((left - self.enc_left) + (right - self.enc_right)) / 2
             
             # calculate odometry
-            dleft = float((left - self.enc_left)) / self.ticks_meter
-            dright = float((right - self.enc_right)) / self.ticks_meter
+            dleft = (left - self.enc_left) / self.ticks_meter
+            dright = (right - self.enc_right) / self.ticks_meter
             
             self.enc_left = left
             self.enc_right = right

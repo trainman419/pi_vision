@@ -28,38 +28,6 @@ from base_controller import *
 from geometry_msgs.msg import Twist
 import threading, time
 
-class Thread2(threading.Thread):
-    def __init__(self, Serializer):
-        threading.Thread.__init__(self)
-        self.finished = threading.Event()
-        self.interval = 0.05  # Access the voltage 2 times per second.
-        self.daemon = False
-        self.count = 0
-        self.mySerializer = Serializer
-
-    def run(self):
-        max_delay = 0
-        while not self.finished.isSet():
-            start = datetime.now()
-            output = "Thread 2:", self.mySerializer.mogo_m_per_s([1, 2], [0.07, -0.07])
-            #output = "Thread 2:", self.mySerializer.rotate(30, 0.08)
-            time.sleep(2)
-            output = "Thread 2:", self.mySerializer.mogo_m_per_s([1, 2], [-0.07, 0.07])
-            #output = "Thread 2:", self.mySerializer.rotate(-30, 0.08)
-            time.sleep(2)
-#            delay = (datetime.now() - start).microseconds / 1000
-#            print output
-#            if delay > max_delay:
-#                max_delay = delay
-#                print "MAX:", max_delay
-            time.sleep(self.interval)
-            
-    def stop(self):
-        print "Stopping Node 2 Thread ...",
-        self.finished.set()
-        self.join()
-        print "Done."
-
 class SerializerROS():
     def __init__(self):
         rospy.init_node('serializer')
@@ -102,9 +70,6 @@ class SerializerROS():
             # The SensorState publisher
             self.sensorStatePub = rospy.Publisher('sensors', SensorState)
         
-        # Subscribe to the velocity command topic so we can control the drive motors.
-        #rospy.Subscriber('cmd_vel', Twist, self.cmdVelCallback)
-        
         # The Serializer services.
         rospy.Service('SetServo', SetServo ,self.SetServoHandler)
         rospy.Service('Rotate', Rotate, self.RotateHandler)
@@ -128,12 +93,9 @@ class SerializerROS():
         self.mySerializer.wheel_track = rospy.get_param("~wheel_track", 0.325)
         self.mySerializer.encoder_resolution = rospy.get_param("~encoder_resolution", 624)
               
-        # Create the base controller.
+        # Create the and start the base controller.
         self.base = base_controller(self.mySerializer, "Serializer PID")
         self.base.start()
-        
-        #mogoThread = Thread2(self.mySerializer)
-        #mogoThread.start()
         
         while not rospy.is_shutdown():
             if self.publish_sensors:
@@ -227,37 +189,6 @@ class SerializerROS():
     
     def PhidgetsCurrentHandler(self, req):
         return PhidgetsCurrentResponse(self.mySerializer.get_PhidgetsCurrent(req.pin, req.cached))
-
-    def cmdVelCallback(self, req):
-        """ Handle velocity-based movement requests. """
-        x = req.linear.x        # m/s
-        th = req.angular.z      # rad/s
-
-        if x == 0:
-            # Turn in place
-            right = th * self.mySerializer.wheel_track  * self.mySerializer.gear_reduction / 2.0
-            if th == 0:
-                left = right
-            else:
-                left = -right
-        elif th == 0:   
-            # Pure forward/backward motion
-            left = right = x
-        else:
-            # Rotation about a point in space
-            left = x - th * self.mySerializer.wheel_track  * self.mySerializer.gear_reduction / 2.0
-            right = x + th * self.mySerializer.wheel_track  * self.mySerializer.gear_reduction / 2.0
-            #d = x/th
-            #l = x + th * (d - self.wheel_track/2.0)
-            #r = x + th * (d + self.wheel_track/2.0)
-
-        # Log motion.                  
-        #rospy.loginfo("Twist move: " + str(left) + ", " + str(right))
-        
-        # Set motor speeds in meters per second.
-        msg = "Left: " + str(left) + " Right: " + str(right)
-        rospy.loginfo(msg)
-        self.mySerializer.mogo_m_per_s([1, 2], [left, right])
         
            
 if __name__ == '__main__':

@@ -1126,7 +1126,7 @@ if __name__ == "__main__":
         
     baudRate = 57600
   
-    mySerializer = Serializer(port=portName, baudrate=baudRate, timeout=0.5)
+    mySerializer = Serializer(port=portName, baudrate=baudRate, timeout=0.05)
     mySerializer.connect()
     
     print "Firmware Version", mySerializer.fw()
