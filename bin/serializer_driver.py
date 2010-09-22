@@ -54,7 +54,7 @@ class Serializer():
     GEAR_REDUCTION = 1.667      # This is for external gearing if you have any.
     
     ENCODER_TYPE = 1            # 1 = quadrature, 0 = single
-    MOTORS_REVERSED = True      # Multiplies encoder counts by -1 if the motor rotation direction is reversed.
+    MOTORS_REVERSED = False      # Multiplies encoder counts by -1 if the motor rotation direction is reversed.
 
     VPID_P = 2   # Proportional
     VPID_I = 0   # Integral
@@ -70,7 +70,7 @@ class Serializer():
     MILLISECONDS_PER_PID_LOOP = 1.6 # Do not change this!  It is a fixed property of the Serializer PID controller.
     LOOP_INTERVAL = VPID_L * MILLISECONDS_PER_PID_LOOP / 1000 # in seconds
     
-    INIT_PID = True # Set to True if you want to update UNITS, VPID and DPID parameters.  Otherwise, those stored in the Serializer's firmware are used.**
+    INIT_PID = False # Set to True if you want to update UNITS, VPID and DPID parameters.  Otherwise, those stored in the Serializer's firmware are used.**
     
     BAD_VALUE = -999
     
