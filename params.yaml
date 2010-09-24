@@ -18,7 +18,7 @@ DPID_D: 0
 DPID_A: 5
 DPID_B: 5
 
-publish_sensors: True
+publish_sensors: False
 
 sensors: {
     'analog': { 'voltage': {'pin': 5, 'type': 'Voltage'}, 'head_ir': {'pin': 4, 'type': 'GP2D12'}, 'drive_current': {'pin': 1, 'type': 'PhidgetsCurrent'} },

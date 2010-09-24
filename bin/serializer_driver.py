@@ -34,6 +34,8 @@
     See the example files for more details.
 """
 
+import roslib; roslib.load_manifest('serializer')
+import rospy
 import serial
 import threading
 import math
@@ -120,6 +122,7 @@ class Serializer():
             self.loop_interval = self.VPID_L * self.MILLISECONDS_PER_PID_LOOP / 1000
 
         except SerialException:
+            rospy.loginfo("Cannot connect to Serializer!")
             print "Cannot connect to Serializer!"
             print "Make sure you are plugged in and turned on."
             os._exit(1)
