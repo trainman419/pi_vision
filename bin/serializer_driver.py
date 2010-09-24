@@ -101,6 +101,7 @@ class Serializer():
             test = (self.port.readline(eol='>')[0:-3]).strip()
             if test != str(self.baudrate):       
                 raise SerialException
+            print self.port
             print "Connected at", self.baudrate, "baud."
 
             # Take care of the UNITS, VPID and DPID parameters for PID drive control.
