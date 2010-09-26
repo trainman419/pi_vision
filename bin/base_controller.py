@@ -32,6 +32,7 @@ from geometry_msgs.msg import Twist
 from geometry_msgs.msg import Pose
 from nav_msgs.msg import Odometry
 from tf.broadcaster import TransformBroadcaster
+import sys
 
 import random
 
@@ -45,7 +46,7 @@ class base_controller(Thread):
         self.mySerializer = Serializer
 
         # Parameters
-        self.rate = float(rospy.get_param("~rate", 10.0))
+        self.rate = float(rospy.get_param("~rate", 20.0))
         self.ticks_meter = float(self.mySerializer.ticks_per_meter)
         self.wheel_track = float(self.mySerializer.wheel_track)
         self.gear_reduction = float(self.mySerializer.gear_reduction)
@@ -56,8 +57,7 @@ class base_controller(Thread):
         self.x = 0.                  # position in xy plane
         self.y = 0.
         self.th = 0.                 # rotation in radians
-        self.ticks = 0
-        self.then = rospy.Time.now() # time for determining dx/dy
+        self.last_time = rospy.Time.now() # time for determining dx/dy
 
         # subscriptions
         rospy.Subscriber("cmd_vel", Twist, self.cmdVelCallback)
@@ -68,24 +68,26 @@ class base_controller(Thread):
         rospy.loginfo("Started Base Controller '"+ name +"' for a base of " + str(self.wheel_track) + "m wide with " + str(self.ticks_meter) + " ticks per meter")
 
     def run(self):
-        self.rate = 5.0
         rosRate = rospy.Rate(self.rate)
         print "Base controller update rate:", self.rate
         
+        old_left = old_right = 0
+        
         while not rospy.is_shutdown() and not self.finished.isSet():
-            rosRate.sleep()
-            now = rospy.Time.now()
-            dt = (now - self.then).to_sec()
-            self.then = now
+            current_time = rospy.Time.now()
+            dt = (current_time - self.last_time).to_sec()
 
             # read encoders
             try:
                 left, right = self.mySerializer.get_encoder_count([1, 2])
             except:
+                rospy.logerr(sys.exc_info())
                 rospy.logerr("Could not update encoders")
-                continue
+                left= old_left
+                right = old_right
             
-            self.ticks += ((left - self.enc_left) + (right - self.enc_right)) / 2
+            old_left = left
+            old_right = right
             
             # calculate odometry
             dleft = (left - self.enc_left) / self.ticks_meter
@@ -119,13 +121,21 @@ class base_controller(Thread):
                 (self.x, self.y, 0), 
                 (quaternion.x, quaternion.y, quaternion.z, quaternion.w),
                 rospy.Time.now(),
-                "base_link",
-                "odom"
+                "/base_link",
+                "/odom"
                 )
+            
+#            self.odomBroadcaster.sendTransform(
+#                (0, 0, 0), 
+#                (0, 0, 0, 1),
+#                rospy.Time.now(),
+#                "odom",
+#                "world"
+#                )
 
             odom = Odometry()
             odom.header.frame_id = "odom"
-            odom.header.stamp = rospy.Time.now()
+            odom.header.stamp = current_time
             odom.pose.pose.position.x = self.x
             odom.pose.pose.position.y = self.y
             odom.pose.pose.position.z = 0
@@ -139,11 +149,14 @@ class base_controller(Thread):
             #rospy.loginfo(odom)
             self.odomPub.publish(odom)
             
+            self.last_time = current_time
+            rosRate.sleep()
+            
 
     def cmdVelCallback(self, req):
         """ Handle velocity-based movement requests. """
         x = req.linear.x        # m/s
-        th = req.angular.z      # rad/s
+        th = -req.angular.z      # rad/s
 
         if x == 0:
             # Turn in place

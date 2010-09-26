@@ -56,7 +56,7 @@ class Serializer():
     GEAR_REDUCTION = 1.667      # This is for external gearing if you have any.
     
     ENCODER_TYPE = 1            # 1 = quadrature, 0 = single
-    MOTORS_REVERSED = False      # Multiplies encoder counts by -1 if the motor rotation direction is reversed.
+    MOTORS_REVERSED = True      # Multiplies encoder counts by -1 if the motor rotation direction is reversed.
 
     VPID_P = 2   # Proportional
     VPID_I = 0   # Integral
@@ -72,7 +72,7 @@ class Serializer():
     MILLISECONDS_PER_PID_LOOP = 1.6 # Do not change this!  It is a fixed property of the Serializer PID controller.
     LOOP_INTERVAL = VPID_L * MILLISECONDS_PER_PID_LOOP / 1000 # in seconds
     
-    INIT_PID = False # Set to True if you want to update UNITS, VPID and DPID parameters.  Otherwise, those stored in the Serializer's firmware are used.**
+    INIT_PID = True # Set to True if you want to update UNITS, VPID and DPID parameters.  Otherwise, those stored in the Serializer's firmware are used.**
     
     BAD_VALUE = -999
     
@@ -1141,18 +1141,18 @@ if __name__ == "__main__":
     print "Encoder ticks per meter", mySerializer.ticks_per_meter
     print "Voltage", mySerializer.voltage()
     
-    while True:
-        print mySerializer.get_all_analog()
-        time.sleep(0.05)
-        print mySerializer.get_encoder_count([1, 2])
-        time.sleep(0.05)
-    
-#    mySerializer.travel_distance(-1, 0.2)
-#    start = datetime.now()
-#    while mySerializer.get_pids():
+#    while True:
+#        print mySerializer.get_all_analog()
 #        time.sleep(0.05)
-#    elapsed = datetime.now() - start
-#    print "Elapsed time", float(elapsed.seconds) + elapsed.microseconds/1000000.
+#        print mySerializer.get_encoder_count([1, 2])
+#        time.sleep(0.05)
+    
+    mySerializer.rotate(1.57, 0.2)
+    start = datetime.now()
+    while mySerializer.get_pids():
+        time.sleep(0.05)
+    elapsed = datetime.now() - start
+    print "Elapsed time", float(elapsed.seconds) + elapsed.microseconds/1000000.
     
     print "Connection test successful, now shutting down...",
     
