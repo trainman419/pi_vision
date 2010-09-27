@@ -46,7 +46,7 @@ class base_controller(Thread):
         self.mySerializer = Serializer
 
         # Parameters
-        self.rate = float(rospy.get_param("~rate", 20.0))
+        self.rate = float(rospy.get_param("~rate", 10.0))
         self.ticks_meter = float(self.mySerializer.ticks_per_meter)
         self.wheel_track = float(self.mySerializer.wheel_track)
         self.gear_reduction = float(self.mySerializer.gear_reduction)
@@ -69,9 +69,10 @@ class base_controller(Thread):
 
     def run(self):
         rosRate = rospy.Rate(self.rate)
-        print "Base controller update rate:", self.rate
+        rospy.loginfo("Base controller update rate: " + str(self.rate))
         
         old_left = old_right = 0
+        bad_encoder_count = 0
         
         while not rospy.is_shutdown() and not self.finished.isSet():
             current_time = rospy.Time.now()
@@ -81,13 +82,14 @@ class base_controller(Thread):
             try:
                 left, right = self.mySerializer.get_encoder_count([1, 2])
             except:
-                rospy.logerr(sys.exc_info())
-                rospy.logerr("Could not update encoders")
-                left= old_left
-                right = old_right
+                rospy.loginfo("Could not update encoders: " + str(bad_encoder_count))
+                bad_encoder_count += 1
+                continue
+#                left= old_left
+#                right = old_right
             
-            old_left = left
-            old_right = right
+            #old_left = left
+            #old_right = right
             
             # calculate odometry
             dleft = (left - self.enc_left) / self.ticks_meter
@@ -121,8 +123,8 @@ class base_controller(Thread):
                 (self.x, self.y, 0), 
                 (quaternion.x, quaternion.y, quaternion.z, quaternion.w),
                 rospy.Time.now(),
-                "/base_link",
-                "/odom"
+                "base_link",
+                "odom"
                 )
             
 #            self.odomBroadcaster.sendTransform(
@@ -155,9 +157,9 @@ class base_controller(Thread):
 
     def cmdVelCallback(self, req):
         """ Handle velocity-based movement requests. """
-        x = req.linear.x        # m/s
-        th = -req.angular.z      # rad/s
-
+        x = req.linear.x         # m/s
+        th = req.angular.z       # rad/s
+        rospy.loginfo("x/th: " + str(x) + "/" + str(th))
         if x == 0:
             # Turn in place
             right = th * self.wheel_track  * self.gear_reduction / 2.0
@@ -184,6 +186,7 @@ class base_controller(Thread):
         if self.mySerializer.MOTORS_REVERSED:
             left = -left
             right = -right
+        rospy.loginfo("Left/Right: " + str(left) + "/" + str(right))
         self.mySerializer.mogo_m_per_s([1, 2], [left, right])
         
     def stop(self):
@@ -191,32 +194,6 @@ class base_controller(Thread):
         self.finished.set()
         self.join()
         
-#    def cmdPoseCallback(self, req):
-#        """ Handle pose-based movement requests. """
-#        x = req.position.x
-#        y = req.position.y
-#        th = req.orientaton.z
-#
-#        if x == 0:
-#            # Turn in place
-#            right = th * self.wheel_track * self.gear_reduction / 2.0
-#            left = -right
-#        elif th == 0:   
-#            # Pure forward/backward motion
-#            left = right = x
-#        else:
-#            # Rotation about a point in space
-#            left = x - th * self.wheel_track * self.gear_reduction  / 2.0
-#            right = x + th * self.wheel_track * self.gear_reduction  / 2.0
-#            #d = x/th
-#            #l = x + th * (d - self.wheel_track/2.0)
-#            #r = x + th * (d + self.wheel_track/2.0)
-#
-#        # Log motion.                  
-#        rospy.loginfo("Twist move: " + str(left) + "," + str(right))
-#        
-#        # Set motor speeds in meters per second.
-#        self.mySerializer.mogo_m_per_s([1, 2], [left, right])
 
     
 

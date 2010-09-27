@@ -50,7 +50,8 @@ class Thread1(threading.Thread):
         max_delay = 0
         while not self.finished.isSet():
             start = datetime.now()
-            output = "Thread 1 Voltage: " + str(mySerializer.voltage()) + " IR: " +  str(mySerializer.get_GP2D12(4)) + "Sonar: " +  str(mySerializer.get_Ping(4))
+            #output = "Thread 1 Voltage: " + str(mySerializer.voltage()) + " IR: " +  str(mySerializer.get_GP2D12(4)) + "Sonar: " +  str(mySerializer.get_Ping(4))
+            output = "Encoders: " + str(mySerializer.get_encoder_count([1, 2]))
             print output
             delay = (datetime.now() - start).microseconds / 1000
             #output = "Thread 1:", delay
@@ -70,7 +71,7 @@ class Thread2(threading.Thread):
     def __init__(self):
         threading.Thread.__init__(self)
         self.finished = threading.Event()
-        self.interval = 0.05  # Access the voltage 2 times per second.
+        self.interval = 0.5  # Access the voltage 2 times per second.
         self.daemon = False
         self.count = 0
 
@@ -78,10 +79,13 @@ class Thread2(threading.Thread):
         max_delay = 0
         while not self.finished.isSet():
             start = datetime.now()
-            output = "Thread 2:", mySerializer.mogo_m_per_s([1, 2], [0.07, -0.07])
-            time.sleep(2)
-            output = "Thread 2:", mySerializer.mogo_m_per_s([1, 2], [-0.07, 0.07])
-            time.sleep(2)
+            output = "Thread 2:", mySerializer.rotate(1.57, 0.2)
+            while mySerializer.get_pids():
+                time.sleep(0.05)
+            output = "Thread 2:", mySerializer.rotate(-1.57, 0.2)
+            while mySerializer.get_pids():
+                time.sleep(0.05)
+            #time.sleep(2)
 #            delay = (datetime.now() - start).microseconds / 1000
 #            print output
 #            if delay > max_delay:
@@ -95,15 +99,15 @@ class Thread2(threading.Thread):
         self.join()
         print "Done."
 
-thread1 = Thread1()
+#thread1 = Thread1()
 thread2 = Thread2()
 
-thread1.start()
+#thread1.start()
 thread2.start()
 
-time.sleep(60)
+time.sleep(600)
 
-thread1.stop()
+#thread1.stop()
 thread2.stop()
 
 mySerializer.stop()

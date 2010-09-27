@@ -51,7 +51,7 @@ class Serializer():
     N_DIGITAL_PORTS = 12
     UNITS = 0                   # 1 is inches, 0 is metric (cm for sensors, meters for wheels measurements) and 2 is "raw"
     WHEEL_DIAMETER = 0.132      # meters (5.0 inches) meters or inches depending on UNITS
-    WHEEL_TRACK = 0.325         # meters (12.8 inches) meters or inches units depending on UNITS
+    WHEEL_TRACK = 0.3365        # meters (12.8 inches) meters or inches units depending on UNITS
     ENCODER_RESOLUTION = 624    # encoder ticks per revolution of the wheel without external gears
     GEAR_REDUCTION = 1.667      # This is for external gearing if you have any.
     
@@ -391,10 +391,9 @@ class Serializer():
         if type(id) == int: id=[id]
         values = self.execute_array('getenc %s' %' '.join(map(str, id)))
 
-        #print "ENCODER IDS", id, "VALUES", values
         if len(values) != len(id):
             print "Encoder count did not match ID count for ids", id
-            print "Values", values
+            raise SerializerException
         else:
             if self.MOTORS_REVERSED:
                 for i in range(len(id)):
@@ -1147,7 +1146,24 @@ if __name__ == "__main__":
 #        print mySerializer.get_encoder_count([1, 2])
 #        time.sleep(0.05)
     
-    mySerializer.rotate(1.57, 0.2)
+    while True:
+        
+        mySerializer.rotate(3.14, 0.2)
+        while mySerializer.get_pids():
+            try:
+                print mySerializer.get_encoder_count([1, 2])
+            except:
+                pass
+            time.sleep(0.05)
+            
+        mySerializer.rotate(-3.14, 0.2)
+        while mySerializer.get_pids():
+            try:
+                print mySerializer.get_encoder_count([1, 2])
+            except:
+                pass
+            time.sleep(0.05)
+        
     start = datetime.now()
     while mySerializer.get_pids():
         time.sleep(0.05)
