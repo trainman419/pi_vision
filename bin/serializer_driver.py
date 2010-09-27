@@ -103,7 +103,6 @@ class Serializer():
             test = (self.port.readline(eol='>')[0:-3]).strip()
             if test != str(self.baudrate):       
                 raise SerialException
-            print self.port
             print "Connected at", self.baudrate, "baud."
 
             # Take care of the UNITS, VPID and DPID parameters for PID drive control.
@@ -212,21 +211,22 @@ class Serializer():
         ''' Thread safe execution of "cmd" on the SerializerTM returning an array.
         '''
         with self.messageLock:
-            try:
-                self.port.flushInput()
-                self.port.flushOutput()
-            except:
-                print "Can't flush array!"
+#            try:
+#                self.port.flushInput()
+#                self.port.flushOutput()
+#            except:
+#                print "Can't flush array!"
             try:
                 self.port.write(cmd + '\r')
                 values = self.recv_array()
-                while values == '' or values == 'NACK' or values == []:
-                    self.port.flushInput()
-                    self.port.flushOutput()
-                    self.port.write(cmd + '\r')
-                    values = self.recv_array()
+                print "VALUES:", values
+#                while values == '' or values == 'NACK' or values == []:
+#                    self.port.flushInput()
+#                    self.port.flushOutput()
+#                    self.port.write(cmd + '\r')
+#                    values = self.recv_array()
             except:
-                return []
+                raise SerialException
 #                print "execute_array exception when executing", cmd
 #                print sys.exc_info()
 #                return None
@@ -262,17 +262,17 @@ class Serializer():
         ''' Thread safe execution of "cmd" on the SerializerTM returning an int.
         '''
         with self.messageLock:
-            try:
-                self.port.flushInput()
-                self.port.flushOutput()
-            except:
-                pass
+#            try:
+#                self.port.flushInput()
+#                self.port.flushOutput()
+#            except:
+#                pass
             try:
                 self.port.write(cmd + '\r')
                 value = self.recv()
                 while value == '' or value == 'NACK':
-                    self.port.flushInput()
-                    self.port.flushOutput()
+#                    self.port.flushInput()
+#                    self.port.flushOutput()
                     self.port.write(cmd + '\r')
                     value = self.recv()
             except:
@@ -393,7 +393,7 @@ class Serializer():
 
         if len(values) != len(id):
             print "Encoder count did not match ID count for ids", id
-            raise SerializerException
+            raise SerialException
         else:
             if self.MOTORS_REVERSED:
                 for i in range(len(id)):
@@ -487,8 +487,31 @@ class Serializer():
         '''
         if type(id) == int: id = [id]
         if type(dist) == int: id = [dist]
-        if type(vel) == int: vel = [vel]          
+        if type(vel) == int: vel = [vel]
+        
+        if self.MOTORS_REVERSED:
+            for i in range(len(dist)):
+                dist[i] = -1 * dist[i] 
+                
         return self.execute('digo %s' %' '.join(map(lambda x: '%d:%d:%d' %x, zip(id, dist, vel))))
+    
+    def digo_m_per_s(self, id, dist, vel):
+        ''' Identical to digo but specifies velocities in meters per second.
+        '''
+        if type(id) == int: id = [id]
+        if type(dist) == int: id = [dist]
+        if type(vel) == int: vel = [vel]
+        
+        spd = list()
+        for v in vel:
+            if self.units == 0:
+                revs_per_second = float(v) / (self.wheel_diameter * math.pi)
+            elif self.units == 1:
+                revs_per_second = float(v) / (self.wheel_diameter * math.pi * 2.54 / 100)
+            ticks_per_loop = revs_per_second * self.encoder_resolution * self.loop_interval * self.gear_reduction
+            spd.append(int(ticks_per_loop))
+                 
+        return self.execute('digo %s' %' '.join(map(lambda x: '%d:%d:%d' %x, zip(id, dist, spd))))
     
     def get_dpid(self):
         ''' Get the PIDA parameter values.
@@ -917,8 +940,6 @@ class Serializer():
             
         revs = dist / (self.wheel_diameter * math.pi)
         ticks = revs * self.encoder_resolution * self.gear_reduction
-        if self.MOTORS_REVERSED:
-            ticks = -ticks
         self.digo([1, 2], [ticks, ticks], [vel, vel])
         
     def mogo(self, id, vel):
@@ -938,7 +959,12 @@ class Serializer():
             in the appropriate configuration.
         '''
         if type(id) == int: id = [id]
-        if type(vel) == int: vel = [vel]          
+        if type(vel) == int: vel = [vel]
+        
+        if self.MOTORS_REVERSED:
+            for i in range(len(vel)):
+                vel[i] = -1 * vel[i]
+                      
         return self.execute_ack('mogo %s' %' '.join(map(lambda x: '%d:%d' %x, zip(id, vel))))
     
     def mogo_m_per_s(self, id, vel):
@@ -955,6 +981,10 @@ class Serializer():
             ticks_per_loop = revs_per_second * self.encoder_resolution * self.loop_interval * self.gear_reduction
             spd.append(int(ticks_per_loop))
         
+        if self.MOTORS_REVERSED:
+            for i in range(len(spd)):
+                spd[i] = -1 * spd[i]
+
         cmd = 'mogo %s' %' '.join(map(lambda x: '%d:%d' %x, zip(id, spd)))  
                     
         return self.execute_ack(cmd)
@@ -967,35 +997,38 @@ class Serializer():
         self.mogo_m_per_s(id, vel)
         
     def rotate(self, angle, vel):
-        ''' Rotate the robot through 'angle' degrees or radians at speed 'vel'.  Use negative angles to rotate
-            in the other direction.
-        '''
-        revs_per_second = float(vel) / (self.wheel_diameter * math.pi)
-        
+        ''' Rotate the robot through 'angle' degrees or radians at speed 'vel'.  Use the ROS convention for right handed
+            coordinate systems with the z-axis pointing up so that a positive angle is counterclockwise.
+            Use negative angles to rotate clockwise.
+        '''        
         if self.units == 0:
+            revs_per_second = float(vel) / (2.0 * math.pi)
             rotation_fraction = angle / (2.0 * math.pi)
+            full_rotation_dist = self.wheel_track * math.pi
         elif self.units == 1:
+            revs_per_second = float(vel) / 360.
             rotation_fraction = angle / 360.
-            
-        ticks_per_loop = revs_per_second * self.encoder_resolution * self.loop_interval * self.gear_reduction
-        vel = (int(ticks_per_loop))
-        
-        full_rotation_dist = self.wheel_track * math.pi
+            full_rotation_dist = self.wheel_track * 2.54 / 100 * math.pi
+
+        vel = revs_per_second * full_rotation_dist # in m/s
+
         rotation_dist = rotation_fraction * full_rotation_dist
         revs = rotation_dist / (self.wheel_diameter * math.pi)
+
         ticks = revs * self.encoder_resolution  * self.gear_reduction
-        self.digo([1, 2], [ticks, -ticks], [vel, vel])
+        self.digo_m_per_s([1, 2], [ticks, -ticks], [vel, vel])
         
     def rotate_at_speed(self, vel):
-        ''' Rotate the robot continously at speed 'vel' radians or degrees per second.  Use negative speed to rotate
-            in the other direction.
+        ''' Rotate the robot continously at speed 'vel' radians or degrees per second.  Use the ROS convention for right handed
+            coordinate systems with the z-axis pointing up so that a positive speed is counterclockwise.
+            Use negative speeds to rotate clockwise.
         '''
             
         if self.units == 1:
             vel = vel / 180. * math.pi
             
         # Check that the user does not mistaken degrees for radians.
-        if vel > 2.0:
+        if vel > 5.0:
             print "That is a rather high rotation rate. Are you sure you specified rotation velocity in the correct units?"
             print "Degrees per second for English units and radians per second for metric."
             print "Keep in mind that 1 radian per second is about 60 degrees per second."
@@ -1003,13 +1036,15 @@ class Serializer():
             
         if self.units == 1:
             full_rotation_dist = self.wheel_track * 2.54 / 100 * math.pi
+            revs_per_second = float(vel) / 360.
+
         else:
             full_rotation_dist = self.wheel_track * math.pi
-            
-        revs_per_second = float(vel) / (2.0 * math.pi)
+            revs_per_second = float(vel) / (2.0 * math.pi) 
+               
         vel = revs_per_second * full_rotation_dist
-        
-        self.mogo_m_per_s([1, 2], [vel, -vel])
+
+        self.mogo_m_per_s([1, 2], [-vel, vel])
         
     def twist(self, twist):
         angle = math.atan2(twist.linear.y, twist.linear.x)
@@ -1146,29 +1181,39 @@ if __name__ == "__main__":
 #        print mySerializer.get_encoder_count([1, 2])
 #        time.sleep(0.05)
     
-    while True:
-        
-        mySerializer.rotate(3.14, 0.2)
-        while mySerializer.get_pids():
-            try:
-                print mySerializer.get_encoder_count([1, 2])
-            except:
-                pass
-            time.sleep(0.05)
+    #while True:
+    
+    #mySerializer.travel_distance(-1.0, 0.2)
+    #while mySerializer.get_pids():
+#        try:
+#            print mySerializer.get_encoder_count([1, 2])
+#        except:
+#            print "Yikes!"
+#            pass
+        #time.sleep(0.05)
+    #mySerializer.mogo_m_per_s([1, 2], [0.2, 0.2])
+    #mySerializer.rotate_at_speed(1)
+    time.sleep(1)
             
-        mySerializer.rotate(-3.14, 0.2)
-        while mySerializer.get_pids():
-            try:
-                print mySerializer.get_encoder_count([1, 2])
-            except:
-                pass
-            time.sleep(0.05)
+    #mySerializer.rotate(6.28, 1)
+    #time.sleep(7)
+#    while mySerializer.get_pids():
+#        try:
+#            print mySerializer.get_encoder_count([1, 2])
+#        except:
+#            print "Yikes!"
+#            pass
+#        time.sleep(0.05)
         
-    start = datetime.now()
-    while mySerializer.get_pids():
-        time.sleep(0.05)
-    elapsed = datetime.now() - start
-    print "Elapsed time", float(elapsed.seconds) + elapsed.microseconds/1000000.
+#    start = datetime.now()
+#    while mySerializer.get_pids():
+#        time.sleep(0.05)
+#    elapsed = datetime.now() - start
+#    print "Elapsed time", float(elapsed.seconds) + elapsed.microseconds/1000000.
+
+    while True:
+        print mySerializer.get_encoder_count([1, 2])
+        time.sleep(0.5) 
     
     print "Connection test successful, now shutting down...",
     
