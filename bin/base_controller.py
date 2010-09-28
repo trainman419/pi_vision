@@ -108,7 +108,7 @@ class base_controller(Thread):
                 self.y += (sin(self.th) * dx + cos(self.th) * dy)
 
             if (dth != 0):
-                self.th += dth
+                self.th += dth 
 
             quaternion = Quaternion()
             quaternion.x = 0.0 
@@ -145,6 +145,9 @@ class base_controller(Thread):
             odom.twist.twist.linear.x = vxy
             odom.twist.twist.linear.y = 0
             odom.twist.twist.angular.z = vth
+            
+            if abs(vth) > 0.71 or abs(vxy) > 0.21:
+                rospy.loginfo("dLeft: " + str(dleft) + " dRight: " + str(dright) + " dt: " + str(dt) + "ct: " + str(current_time) + " lt: " + str(self.last_time))
             
             #rospy.loginfo(odom)
             self.odomPub.publish(odom)
