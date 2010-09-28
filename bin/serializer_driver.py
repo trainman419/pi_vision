@@ -76,7 +76,7 @@ class Serializer():
     
     BAD_VALUE = -999
     
-    def __init__(self, port="/dev/ttyUSB0", baudrate=57600, timeout=0.5): 
+    def __init__(self, port="/dev/ttyUSB0", baudrate=19200, timeout=0.5): 
         self.port = port
         self.baudrate = baudrate
         self.timeout = timeout
@@ -202,8 +202,6 @@ class Serializer():
                     self.port.write(cmd + '\r')
                     value = self.recv()
             except:
-#                print "execute exception when executing", cmd
-#                print sys.exc_info()
                 return None
         return value
 
@@ -211,25 +209,21 @@ class Serializer():
         ''' Thread safe execution of "cmd" on the SerializerTM returning an array.
         '''
         with self.messageLock:
-#            try:
-#                self.port.flushInput()
-#                self.port.flushOutput()
-#            except:
-#                print "Can't flush array!"
+            try:
+                self.port.flushInput()
+                self.port.flushOutput()
+            except:
+                pass
             try:
                 self.port.write(cmd + '\r')
                 values = self.recv_array()
-                print "VALUES:", values
-#                while values == '' or values == 'NACK' or values == []:
-#                    self.port.flushInput()
-#                    self.port.flushOutput()
-#                    self.port.write(cmd + '\r')
-#                    values = self.recv_array()
+                while values == '' or values == 'NACK' or values == []:
+                    self.port.flushInput()
+                    self.port.flushOutput()
+                    self.port.write(cmd + '\r')
+                    values = self.recv_array()
             except:
                 raise SerialException
-#                print "execute_array exception when executing", cmd
-#                print sys.exc_info()
-#                return None
         try:
             return map(int, values)
         except:
@@ -262,17 +256,17 @@ class Serializer():
         ''' Thread safe execution of "cmd" on the SerializerTM returning an int.
         '''
         with self.messageLock:
-#            try:
-#                self.port.flushInput()
-#                self.port.flushOutput()
-#            except:
-#                pass
+            try:
+                self.port.flushInput()
+                self.port.flushOutput()
+            except:
+                pass
             try:
                 self.port.write(cmd + '\r')
                 value = self.recv()
                 while value == '' or value == 'NACK':
-#                    self.port.flushInput()
-#                    self.port.flushOutput()
+                    self.port.flushInput()
+                    self.port.flushOutput()
                     self.port.write(cmd + '\r')
                     value = self.recv()
             except:
@@ -1162,9 +1156,9 @@ if __name__ == "__main__":
     else:
         portName = "COM12" # Windows style COM port.
         
-    baudRate = 57600
+    baudRate = 19200
   
-    mySerializer = Serializer(port=portName, baudrate=baudRate, timeout=0.05)
+    mySerializer = Serializer(port=portName, baudrate=baudRate, timeout=0.5)
     mySerializer.connect()
     
     print "Firmware Version", mySerializer.fw()
@@ -1175,45 +1169,10 @@ if __name__ == "__main__":
     print "Encoder ticks per meter", mySerializer.ticks_per_meter
     print "Voltage", mySerializer.voltage()
     
-#    while True:
-#        print mySerializer.get_all_analog()
-#        time.sleep(0.05)
-#        print mySerializer.get_encoder_count([1, 2])
-#        time.sleep(0.05)
-    
-    #while True:
-    
-    #mySerializer.travel_distance(-1.0, 0.2)
-    #while mySerializer.get_pids():
-#        try:
-#            print mySerializer.get_encoder_count([1, 2])
-#        except:
-#            print "Yikes!"
-#            pass
-        #time.sleep(0.05)
-    #mySerializer.mogo_m_per_s([1, 2], [0.2, 0.2])
-    #mySerializer.rotate_at_speed(1)
-    time.sleep(1)
-            
-    #mySerializer.rotate(6.28, 1)
-    #time.sleep(7)
-#    while mySerializer.get_pids():
-#        try:
-#            print mySerializer.get_encoder_count([1, 2])
-#        except:
-#            print "Yikes!"
-#            pass
-#        time.sleep(0.05)
-        
-#    start = datetime.now()
-#    while mySerializer.get_pids():
-#        time.sleep(0.05)
-#    elapsed = datetime.now() - start
-#    print "Elapsed time", float(elapsed.seconds) + elapsed.microseconds/1000000.
-
     while True:
         print mySerializer.get_encoder_count([1, 2])
-        time.sleep(0.5) 
+        time.sleep(0.005)
+    
     
     print "Connection test successful, now shutting down...",
     

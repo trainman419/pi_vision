@@ -1,8 +1,9 @@
 port: /dev/ttyUSB0
 #port: /dev/rfcomm0
-baud: 57600
+baud: 19200
 timeout: 0.5
-rate: 10
+sensor_rate: 10
+base_controller_rate: 10
 wheel_diameter: 0.132
 wheel_track: 0.3365
 encoder_resolution: 624

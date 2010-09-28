@@ -46,7 +46,7 @@ class base_controller(Thread):
         self.mySerializer = Serializer
 
         # Parameters
-        self.rate = float(rospy.get_param("~rate", 10.0))
+        self.rate = float(rospy.get_param("~base_controller_rate", 20.0))
         self.ticks_meter = float(self.mySerializer.ticks_per_meter)
         self.wheel_track = float(self.mySerializer.wheel_track)
         self.gear_reduction = float(self.mySerializer.gear_reduction)
@@ -69,14 +69,14 @@ class base_controller(Thread):
 
     def run(self):
         rosRate = rospy.Rate(self.rate)
-        rospy.loginfo("Base controller update rate: " + str(self.rate))
+        rospy.loginfo("Publishing Odometry data at: " + str(self.rate) + " Hz")
         
         old_left = old_right = 0
         bad_encoder_count = 0
         
         while not rospy.is_shutdown() and not self.finished.isSet():
+            rosRate.sleep()
             current_time = rospy.Time.now()
-            dt = (current_time - self.last_time).to_sec()
 
             # read encoders
             try:
@@ -85,11 +85,9 @@ class base_controller(Thread):
                 rospy.loginfo("Could not update encoders: " + str(bad_encoder_count))
                 bad_encoder_count += 1
                 continue
-#                left= old_left
-#                right = old_right
-            
-            #old_left = left
-            #old_right = right
+
+            dt = (current_time - self.last_time).to_sec()
+            self.last_time = current_time
             
             # calculate odometry
             dleft = (left - self.enc_left) / self.ticks_meter
@@ -150,23 +148,22 @@ class base_controller(Thread):
             
             #rospy.loginfo(odom)
             self.odomPub.publish(odom)
-            
-            self.last_time = current_time
-            rosRate.sleep()
+
             
 
     def cmdVelCallback(self, req):
         """ Handle velocity-based movement requests. """
         x = req.linear.x         # m/s
         th = req.angular.z       # rad/s
-        rospy.loginfo("x/th: " + str(x) + "/" + str(th))
+        if x > 0.3:
+            rospy.loginfo("X MAX EXCEEDED! " + str(x))
+        if th > 1.0:
+            rospy.loginfo("THETA MAX EXCEEDED! " + str(th))
+        #rospy.loginfo("x/th: " + str(x) + "/" + str(th))
         if x == 0:
             # Turn in place
             right = th * self.wheel_track  * self.gear_reduction / 2.0
-            if th == 0:
-                left = right
-            else:
-                left = -right
+            left = -right
         elif th == 0:   
             # Pure forward/backward motion
             left = right = x
@@ -183,10 +180,9 @@ class base_controller(Thread):
         
         # Set motor speeds in meters per second.
         #rospy.loginfo("")
-        if self.mySerializer.MOTORS_REVERSED:
-            left = -left
-            right = -right
-        rospy.loginfo("Left/Right: " + str(left) + "/" + str(right))
+        if left < 0 and right < 0:
+            rospy.loginfo("GOING BACKWARDS!!!!!!!!!!!!!!!!!!!!!!!!")
+        #rospy.loginfo("Left/Right: " + str(left) + "/" + str(right))
         self.mySerializer.mogo_m_per_s([1, 2], [left, right])
         
     def stop(self):

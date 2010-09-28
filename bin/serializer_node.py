@@ -32,12 +32,13 @@ class SerializerROS():
     def __init__(self):
         rospy.init_node('serializer')
         self.port = rospy.get_param("~port", "/dev/ttyUSB0")
-        self.baud = int(rospy.get_param("~baud", 57600))
-        self.rate = int(rospy.get_param("~rate", 20))
+        self.baud = int(rospy.get_param("~baud", 19200))
+        self.rate = int(rospy.get_param("~sensor_rate", 20))
         self.publish_sensors = rospy.get_param("~publish_sensors", True)
         self.timeout = rospy.get_param("~timeout", 0.5)
                 
-        rospy.loginfo("Started Serializer on port " + self.port + " at " + str(self.baud))
+        rospy.loginfo("Connected to Serializer on port " + self.port + " at " + str(self.baud) + "baud")
+        rospy.loginfo("Publishing Serializer data at " + str(self.rate) + " Hz")
         
         if self.publish_sensors:
             self.analog_sensors = dict({})
@@ -82,7 +83,7 @@ class SerializerROS():
         rospy.Service('PhidgetsVoltage', PhidgetsVoltage, self.PhidgetsVoltageHandler)
         rospy.Service('PhidgetsCurrent', PhidgetsCurrent, self.PhidgetsCurrentHandler)
         
-        self.rate = rospy.Rate(self.rate)
+        rosRate = rospy.Rate(self.rate)
         
         # Initialize the Serializer driver
         self.mySerializer = SerializerAPI.Serializer(self.port, self.baud, self.timeout)
@@ -151,7 +152,7 @@ class SerializerROS():
                 
                 #rospy.loginfo(self.msg)
                 self.sensorStatePub.publish(self.msg)
-                self.rate.sleep()
+                rosRate.sleep()
             else:
                 rospy.spin()
             
