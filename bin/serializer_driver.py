@@ -34,8 +34,8 @@
     See the example files for more details.
 """
 
-#import roslib; roslib.load_manifest('serializer')
-#import rospy
+import roslib; roslib.load_manifest('serializer')
+import rospy
 import serial
 import threading
 import math
@@ -93,7 +93,7 @@ class Serializer():
         
         ''' An array to cache digital sensor readings'''
         self.digital_sensor_cache = [None] * self.N_DIGITAL_PORTS
-    
+            
     def connect(self):
         try:
             print "Connecting to Serializer on port", self.port, "..."
@@ -196,7 +196,7 @@ class Serializer():
             try:
                 self.port.write(cmd + '\r')
                 value = self.recv()
-                while value == '' or value == 'NACK':
+                while value == '' or value == 'NACK' or value == None:
                     self.port.flushInput()
                     self.port.flushOutput()
                     self.port.write(cmd + '\r')
@@ -241,7 +241,7 @@ class Serializer():
             try:
                 self.port.write(cmd + '\r')
                 ack = self.recv()
-                while ack == '' or ack == 'NACK':
+                while ack == '' or ack == 'NACK' or value == None:
                     self.port.flushInput()
                     self.port.flushOutput()
                     self.port.write(cmd + '\r')
@@ -262,10 +262,10 @@ class Serializer():
             except:
                 pass
             try:
-                print "CMD:", cmd
                 self.port.write(cmd + '\r')
                 value = self.recv()
-                while value == '' or value == 'NACK':
+                while value == '' or value == 'NACK' or value == None:
+                    rospy.loginfo("RETRY!")
                     self.port.flushInput()
                     self.port.flushOutput()
                     self.port.write(cmd + '\r')
@@ -273,7 +273,7 @@ class Serializer():
             except:
                 print "execute_int exception when executing", cmd
                 print sys.exc_info()
-                return None
+                pass
         return int(value)
                 
     def update_digital_cache(self, id, value):

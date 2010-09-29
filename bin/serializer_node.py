@@ -155,7 +155,7 @@ class SerializerROS():
                 rosRate.sleep()
             else:
                 rospy.spin()
-            
+                
     def SetServoHandler(self, req):
         self.mySerializer.servo(req.id, req.value)
         return SetServoResponse()
@@ -174,7 +174,11 @@ class SerializerROS():
         return GetAnalogResponse(self.mySerializer.get_analog(req.pin, req.cached))
     
     def PingHandler(self, req):
-        return PingResponse(self.mySerializer.get_Ping(req.pin, req.cached))
+        try:
+            sonar = self.mySerializer.get_Ping(req.pin, req.cached)
+        except:
+            rospy.logerror("BAD SONAR: " + str(sonar))
+        return PingResponse(sonar)
 
     def GP2D12Handler(self, req):
         return GP2D12Response(self.mySerializer.get_GP2D12(req.pin, req.cached))
