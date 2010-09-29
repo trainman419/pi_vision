@@ -34,8 +34,8 @@
     See the example files for more details.
 """
 
-import roslib; roslib.load_manifest('serializer')
-import rospy
+#import roslib; roslib.load_manifest('serializer')
+#import rospy
 import serial
 import threading
 import math
@@ -121,7 +121,7 @@ class Serializer():
             self.loop_interval = self.VPID_L * self.MILLISECONDS_PER_PID_LOOP / 1000
 
         except SerialException:
-            rospy.loginfo("Cannot connect to Serializer!")
+            #rospy.loginfo("Cannot connect to Serializer!")
             print "Cannot connect to Serializer!"
             print "Make sure you are plugged in and turned on."
             os._exit(1)
@@ -262,6 +262,7 @@ class Serializer():
             except:
                 pass
             try:
+                print "CMD:", cmd
                 self.port.write(cmd + '\r')
                 value = self.recv()
                 while value == '' or value == 'NACK':
@@ -1170,8 +1171,8 @@ if __name__ == "__main__":
     print "Voltage", mySerializer.voltage()
     
     while True:
-        print mySerializer.get_encoder_count([1, 2])
-        time.sleep(0.005)
+        print mySerializer.get_Ping(5, False)
+        time.sleep(0.5)
     
     
     print "Connection test successful, now shutting down...",
