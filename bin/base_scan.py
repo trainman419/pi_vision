@@ -74,28 +74,17 @@ class base_scan(Thread):
         while not rospy.is_shutdown():
             
             ranges = list()
-        
-#            if self.count % 1 == 0:
-#                if self.servo_direction > 0:
-#                    self.setServo(self.servo_id, self.right)
-#                else:
-#                    self.setServo(self.servo_id, self.left)
-#            
-#                self.servo_direction *= -1
-#        
-#            self.count += 1
 
             for i in range(self.n_samples):
+                sonar = self.getPing(5, False)
+                ranges.append(sonar / 100.0)
                 if self.servo_direction > 0:
                     self.setServo(self.servo_id, self.left + i * self.servo_increment)
                 else:
                     self.setServo(self.servo_id, self.right - i * self.servo_increment)
-                time.sleep(0.05)         
-                sonar = self.getPing(5, False)
-                rospy.loginfo(str(sonar))
-                ranges.append(sonar)
-        
-            if self.servo_direction > 0:
+                time.sleep(0.05)
+                        
+            if self.servo_direction < 0:
                 ranges.reverse()
                 
             scan = LaserScan()

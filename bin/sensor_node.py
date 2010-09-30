@@ -132,8 +132,6 @@ class SerializerROS():
         self.base = base_controller(self.mySerializer, "Serializer PID")
         self.base.start()
         
-        #mogoThread = Thread2(self.mySerializer)
-        #mogoThread.start()
         
         while not rospy.is_shutdown():
             if self.publish_sensors:
