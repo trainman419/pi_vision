@@ -63,8 +63,7 @@ class base_scan(Thread):
         
         sonar = None
         while sonar == None:
-            #sonar = float(self.getPing(5, False))
-            sonar = self.getVoltage(False)
+            sonar = self.getPing(5, False)
         last_sonar = sonar
         rospy.loginfo("Initial Sonar Reading: " + str(sonar))
         
@@ -76,40 +75,26 @@ class base_scan(Thread):
             
             ranges = list()
         
-            if self.count % 1 == 0:
-                if self.servo_direction > 0:
-                    self.setServo(self.servo_id, self.right)
-                else:
-                    self.setServo(self.servo_id, self.left)
-            
-                self.servo_direction *= -1
-        
-            self.count += 1
-            
-            #self.servo_direction *= -1
+#            if self.count % 1 == 0:
+#                if self.servo_direction > 0:
+#                    self.setServo(self.servo_id, self.right)
+#                else:
+#                    self.setServo(self.servo_id, self.left)
+#            
+#                self.servo_direction *= -1
+#        
+#            self.count += 1
 
             for i in range(self.n_samples):
-#                if self.servo_direction < 0:
-#                    self.setServo(self.servo_id, self.left + i * self.servo_increment)
-#                else:
-#                    elf.setServo(self.servo_id, self.right - i * self.servo_increment)
-#                time.sleep(0.05)
-#                ranges.append(self.sonar)
-                time.sleep(0.05)
-                try:
-                    #sonar = float(self.getPing(5, False))
-                    sonar = self.getVoltage(False)
-
-                except:
-                    sonar = last_sonar
-                if sonar == None:
-                    sonar = last_sonar
-                last_sonar = sonar
+                if self.servo_direction > 0:
+                    self.setServo(self.servo_id, self.left + i * self.servo_increment)
+                else:
+                    self.setServo(self.servo_id, self.right - i * self.servo_increment)
+                time.sleep(0.05)         
+                sonar = self.getPing(5, False)
                 rospy.loginfo(str(sonar))
                 ranges.append(sonar)
-
         
-                
             if self.servo_direction > 0:
                 ranges.reverse()
                 
@@ -124,6 +109,8 @@ class base_scan(Thread):
             scan.range_max = self.range_max
             scan.ranges = ranges    
             self.scanPub.publish(scan)
+            
+            self.servo_direction *= -1
             
         #    scan = LaserScan()
         #    scan.header.stamp = rospy.Time.now()        
@@ -157,7 +144,6 @@ class base_scan(Thread):
         try:
             pingProxy = rospy.ServiceProxy('Ping', Ping)
             response = pingProxy(id, cached)
-            rospy.loginfo("Ping: ", str(response.value))
             return response.value
         except rospy.ServiceException, e:
             print "Service call failed: %s"%e
@@ -168,8 +154,6 @@ class base_scan(Thread):
             voltageProxy = rospy.ServiceProxy('Voltage', Voltage)
             response = voltageProxy(cached)
             voltage = response.value
-            print "VOLTAGE", voltage
-            rospy.loginfo("Voltage: ", str(voltage))
             return voltage
         except rospy.ServiceException, e:
             print "Service call failed: %s"%e
