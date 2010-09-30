@@ -25,6 +25,7 @@ import serializer_driver as SerializerAPI
 from serializer.msg import SensorState
 from serializer.srv import *
 from base_controller import *
+from base_scan import *
 from geometry_msgs.msg import Twist
 import threading, time
 
@@ -95,8 +96,11 @@ class SerializerROS():
         self.mySerializer.encoder_resolution = rospy.get_param("~encoder_resolution", 624)
               
         # Create the and start the base controller.
-        self.base = base_controller(self.mySerializer, "Serializer PID")
-        self.base.start()
+        self.base_controller = base_controller(self.mySerializer, "Serializer PID")
+        self.base_controller.start()
+        
+        self.base_scan = base_scan(self.mySerializer, "Base Sonar Scan")
+        self.base_scan.start()
         
         while not rospy.is_shutdown():
             if self.publish_sensors:
@@ -183,7 +187,7 @@ class SerializerROS():
     def GP2D12Handler(self, req):
         return GP2D12Response(self.mySerializer.get_GP2D12(req.pin, req.cached))
     
-    def VoltageHandler(self):
+    def VoltageHandler(self, req):
         return VoltageResponse(self.mySerializer.voltage(req.cached))
 
     def PhidgetsTemperatureHandler(self, req):
@@ -200,6 +204,5 @@ if __name__ == '__main__':
     try:
         mySerializer = SerializerROS()
     except rospy.ROSInterruptException:
-        mogoThread.stop()
         pass
         #self.base.stop()

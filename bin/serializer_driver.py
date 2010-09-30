@@ -241,7 +241,7 @@ class Serializer():
             try:
                 self.port.write(cmd + '\r')
                 ack = self.recv()
-                while ack == '' or ack == 'NACK' or value == None:
+                while ack == '' or ack == 'NACK' or ack == None:
                     self.port.flushInput()
                     self.port.flushOutput()
                     self.port.write(cmd + '\r')
@@ -265,7 +265,6 @@ class Serializer():
                 self.port.write(cmd + '\r')
                 value = self.recv()
                 while value == '' or value == 'NACK' or value == None:
-                    rospy.loginfo("RETRY!")
                     self.port.flushInput()
                     self.port.flushOutput()
                     self.port.write(cmd + '\r')
