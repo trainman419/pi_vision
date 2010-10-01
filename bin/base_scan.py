@@ -46,8 +46,12 @@ class base_scan(Thread):
         self.sonar = 0.128  
      
         # Scanning servo
-        self.right = 70
-        self.left = -90
+        self.servo_id = 2
+        self.sensor_id = 5
+        self.right = 60
+        self.left = -80
+#        self.right = 70
+#        self.left = -90
         self.sweep_angle = pi * (self.right - self.left) / 200.
         self.angle_max = self.sweep_angle / 2.0
         self.angle_min = -self.angle_max
@@ -56,14 +60,14 @@ class base_scan(Thread):
         self.servo_increment = (self.right - self.left) / self.n_samples
         self.range_min = 0.02
         self.range_max = 3.0
-        self.servo_id = 2
-        self.setServo(self.servo_id, self.left)
+
+        self.setServo(self.servo_id, (self.right - self.left) / 2 + self.left)
         self.servo_direction = 1
         self.count = 0
         
         sonar = None
         while sonar == None:
-            sonar = self.getPing(5, False)
+            sonar = self.getPing(self.sensor_id, False)
         last_sonar = sonar
         rospy.loginfo("Initial Sonar Reading: " + str(sonar))
         
@@ -76,20 +80,20 @@ class base_scan(Thread):
             ranges = list()
 
             for i in range(self.n_samples):
-                sonar = self.getPing(5, False)
+                sonar = self.getPing(self.sensor_id, False)
                 ranges.append(sonar / 100.0)
-                if self.servo_direction > 0:
-                    self.setServo(self.servo_id, self.left + i * self.servo_increment)
-                else:
-                    self.setServo(self.servo_id, self.right - i * self.servo_increment)
+#                if self.servo_direction > 0:
+#                    self.setServo(self.servo_id, self.left + i * self.servo_increment)
+#                else:
+#                    self.setServo(self.servo_id, self.right - i * self.servo_increment)
                 time.sleep(0.05)
                         
-            if self.servo_direction < 0:
+            if self.servo_direction > 0:
                 ranges.reverse()
                 
             scan = LaserScan()
             scan.header.stamp = rospy.Time.now()
-            scan.header.frame_id = "base_link"
+            scan.header.frame_id = "base_scan"
             scan.angle_min = self.angle_min
             scan.angle_max = self.angle_max
             scan.angle_increment = self.angle_increment
