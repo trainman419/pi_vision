@@ -26,7 +26,7 @@ from sensor_msgs.msg import LaserScan
 from tf.broadcaster import TransformBroadcaster
 from serializer.srv import *
 from serializer.msg import *
-from math import pi
+from math import pi, pow
 import time
 from threading import Thread, Event
 
@@ -41,13 +41,14 @@ class base_scan(Thread):
         #rospy.Subscriber("sensors", SensorState, self.sensorCallback)
         
         self.rate = 1        
-        rospy.loginfo("Started base sonar scan at " + str(self.rate) + " Hz")
+        rospy.loginfo("Started base scan at " + str(self.rate) + " Hz")
         
         self.sonar = 0.128  
      
         # Scanning servo
         self.servo_id = 2
-        self.sensor_id = 5
+        self.sonar_id = 5
+        self.ir_id = 3
         self.right = 60
         self.left = -80
 #        self.right = 70
@@ -55,38 +56,57 @@ class base_scan(Thread):
         self.sweep_angle = pi * (self.right - self.left) / 200.
         self.angle_max = self.sweep_angle / 2.0
         self.angle_min = -self.angle_max
-        self.n_samples = 20
+        self.n_samples = 30
         self.angle_increment = self.sweep_angle / self.n_samples
         self.servo_increment = (self.right - self.left) / self.n_samples
-        self.range_min = 0.02
+        self.range_min = 0.2
         self.range_max = 3.0
 
         self.setServo(self.servo_id, (self.right - self.left) / 2 + self.left)
         self.servo_direction = 1
         self.count = 0
         
-        sonar = None
-        while sonar == None:
-            sonar = self.getPing(self.sensor_id, False)
-        last_sonar = sonar
-        rospy.loginfo("Initial Sonar Reading: " + str(sonar))
+#        sonar = None
+#        while sonar == None:
+#            sonar = self.getPing(self.sensor_id, False)
+#        rospy.loginfo("Initial Sonar Reading: " + str(sonar))
+
+        ir = None
+        while ir == None:
+            rospy.loginfo("Getting IR Reading: " + str(ir))
+            ir = self.SharpGP2Y0A0(self.getAnalog(self.ir_id))
+        rospy.loginfo("Initial IR Reading: " + str(ir))
         
     def run(self):
         rosRate = rospy.Rate(self.rate)
         rospy.loginfo("Executing base scan at: " + str(self.rate) + " Hz")
+        
         
         while not rospy.is_shutdown():
             
             ranges = list()
 
             for i in range(self.n_samples):
-                sonar = self.getPing(self.sensor_id, False)
-                ranges.append(sonar / 100.0)
-#                if self.servo_direction > 0:
-#                    self.setServo(self.servo_id, self.left + i * self.servo_increment)
-#                else:
-#                    self.setServo(self.servo_id, self.right - i * self.servo_increment)
-                time.sleep(0.05)
+                #sonar = self.getPing(self.sensor_id, False)
+                ir = self.SharpGP2Y0A0(self.getAnalog(self.ir_id))
+                ranges.append(ir / 100.0)
+                if self.servo_direction > 0:
+                    self.setServo(self.servo_id, self.left + i * self.servo_increment)
+                else:
+                    self.setServo(self.servo_id, self.right - i * self.servo_increment)
+                #time.sleep(0.05)
+
+#            if self.servo_direction > 0:
+#                self.setServo(self.servo_id, self.right)
+#            else:
+#                self.setServo(self.servo_id, self.left)
+#                
+#            for i in range(self.n_samples):
+#                #sonar = self.getPing(self.sensor_id, False)
+#                ir = self.SharpGP2Y0A0(self.getAnalog(self.ir_id))
+#                ranges.append(ir / 100.0)
+#                #rospy.loginfo("IR: " + str(ir))
+#                #time.sleep(0.03333)           
                         
             if self.servo_direction > 0:
                 ranges.reverse()
@@ -150,10 +170,23 @@ class base_scan(Thread):
             return voltage
         except rospy.ServiceException, e:
             print "Service call failed: %s"%e
+            
+    def getAnalog(self, id):
+        rospy.wait_for_service('GetAnalog')
+        try:
+            analogProxy = rospy.ServiceProxy('GetAnalog', GetAnalog)
+            response = analogProxy(id)
+            return response.value
+        except rospy.ServiceException, e:
+            print "Service call failed: %s"%e
     
     def sensorCallback(self, data):
         self.sonar = data.value[0] / 100.
         #rospy.loginfo("Sensor Data: " + str(data.value))
+        
+    def SharpGP2Y0A0(self, reading):
+        range = 7140.66 * pow(reading + 1, -0.87507)
+        return range
     
 
 if __name__ == '__main__':

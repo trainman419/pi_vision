@@ -38,7 +38,7 @@ class SerializerROS():
         self.publish_sensors = rospy.get_param("~publish_sensors", True)
         self.timeout = rospy.get_param("~timeout", 0.5)
                 
-        rospy.loginfo("Connected to Serializer on port " + self.port + " at " + str(self.baud) + "baud")
+        rospy.loginfo("Connected to Serializer on port " + self.port + " at " + str(self.baud) + " baud")
         rospy.loginfo("Publishing Serializer data at " + str(self.rate) + " Hz")
         
         if self.publish_sensors:
@@ -173,9 +173,7 @@ class SerializerROS():
         return TravelDistanceResponse()
     
     def GetAnalogHandler(self, req):
-        if req.cached is None:
-            req.cached = False
-        return GetAnalogResponse(self.mySerializer.get_analog(req.pin, req.cached))
+        return GetAnalogResponse(self.mySerializer.get_analog(req.pin))
     
     def PingHandler(self, req):
         try:

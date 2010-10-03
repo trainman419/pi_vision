@@ -217,7 +217,7 @@ class Serializer():
             try:
                 self.port.write(cmd + '\r')
                 values = self.recv_array()
-                while values == '' or values == 'NACK' or values == []:
+                while values == '' or values == 'NACK' or values == [] or values == None:
                     self.port.flushInput()
                     self.port.flushOutput()
                     self.port.write(cmd + '\r')
@@ -1168,6 +1168,8 @@ if __name__ == "__main__":
     print "DPID", mySerializer.get_dpid()
     print "Encoder ticks per meter", mySerializer.ticks_per_meter
     print "Voltage", mySerializer.voltage()
+    
+    mySerializer.servo(2, 0)
     
     while True:
         print mySerializer.get_Ping(5, False)
