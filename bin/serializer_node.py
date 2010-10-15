@@ -33,7 +33,7 @@ class SerializerROS():
     def __init__(self):
         rospy.init_node('serializer')
         self.port = rospy.get_param("~port", "/dev/ttyUSB0")
-        self.baud = int(rospy.get_param("~baud", 19200))
+        self.baud = int(rospy.get_param("~baud", 57600))
         self.rate = int(rospy.get_param("~sensor_rate", 20))
         self.publish_sensors = rospy.get_param("~publish_sensors", True)
         self.timeout = rospy.get_param("~timeout", 0.5)

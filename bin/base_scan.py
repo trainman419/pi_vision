@@ -40,7 +40,7 @@ class base_scan(Thread):
         self.scanBroadcaster = TransformBroadcaster()
         #rospy.Subscriber("sensors", SensorState, self.sensorCallback)
         
-        self.rate = 1        
+        self.rate = 1.333       
         rospy.loginfo("Started base scan at " + str(self.rate) + " Hz")
         
         self.sonar = 0.128  
@@ -56,13 +56,14 @@ class base_scan(Thread):
         self.sweep_angle = pi * (self.right - self.left) / 200.
         self.angle_max = self.sweep_angle / 2.0
         self.angle_min = -self.angle_max
-        self.n_samples = 30
+        self.n_samples = 15
         self.angle_increment = self.sweep_angle / self.n_samples
         self.servo_increment = (self.right - self.left) / self.n_samples
         self.range_min = 0.2
-        self.range_max = 3.0
+        self.range_max = 1.5
 
-        self.setServo(self.servo_id, (self.right - self.left) / 2 + self.left)
+        #self.setServo(self.servo_id, (self.right - self.left) / 2 + self.left)
+        self.setServo(self.servo_id, self.right)
         self.servo_direction = 1
         self.count = 0
         
@@ -85,16 +86,21 @@ class base_scan(Thread):
         while not rospy.is_shutdown():
             
             ranges = list()
+            
 
             for i in range(self.n_samples):
                 #sonar = self.getPing(self.sensor_id, False)
                 ir = self.SharpGP2Y0A0(self.getAnalog(self.ir_id))
                 ranges.append(ir / 100.0)
+                
                 if self.servo_direction > 0:
                     self.setServo(self.servo_id, self.left + i * self.servo_increment)
+                    #self.setServo(self.servo_id, self.left)
                 else:
                     self.setServo(self.servo_id, self.right - i * self.servo_increment)
-                #time.sleep(0.05)
+                    #self.setServo(self.servo_id, self.right)
+
+                #time.sleep(0.03)
 
 #            if self.servo_direction > 0:
 #                self.setServo(self.servo_id, self.right)
@@ -125,17 +131,17 @@ class base_scan(Thread):
             
             self.servo_direction *= -1
             
-        #    scan = LaserScan()
-        #    scan.header.stamp = rospy.Time.now()        
-        #    scan.header.frame_id = "base_link"
-        #    scan.angle_min = -1.57
-        #    scan.angle_max = 1.57
-        #    scan.angle_increment = 0.108275862
-        #    scan.scan_time = scan_rate
-        #    scan.range_min = 0.5
-        #    scan.range_max = 6.0
-        #    scan.ranges = ranges    
-        #    scanPub.publish(scan)
+#            scan = LaserScan()
+#            scan.header.stamp = rospy.Time.now()        
+#            scan.header.frame_id = "base_link"
+#            scan.angle_min = -1.57
+#            scan.angle_max = 1.57
+#            scan.angle_increment = 0.108275862
+#            scan.scan_time = 1.0 / self.rate
+#            scan.range_min = 0.5
+#            scan.range_max = 6.0
+#            scan.ranges = ranges    
+#            scanPub.publish(scan)
         
             rosRate.sleep()
             

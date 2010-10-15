@@ -1,6 +1,6 @@
 port: /dev/ttyUSB0
 #port: /dev/rfcomm0
-baud: 19200
+baud: 57600
 timeout: 0.5
 sensor_rate: 30
 base_controller_rate: 10
