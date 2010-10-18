@@ -30,17 +30,17 @@ from math import pi, pow
 import time
 from threading import Thread, Event
 
-
 class base_scan(Thread):
     def __init__(self, Serializer, name):
         Thread.__init__ (self)
         self.finished = Event()
         #rospy.init_node("base_scan")
+        self.Serializer = Serializer
         self.scanPub = rospy.Publisher('base_scan', LaserScan)
         self.scanBroadcaster = TransformBroadcaster()
         #rospy.Subscriber("sensors", SensorState, self.sensorCallback)
         
-        self.rate = 1.333       
+        self.rate = 1     
         rospy.loginfo("Started base scan at " + str(self.rate) + " Hz")
         
         self.sonar = 0.128  
@@ -60,10 +60,10 @@ class base_scan(Thread):
         self.angle_increment = self.sweep_angle / self.n_samples
         self.servo_increment = (self.right - self.left) / self.n_samples
         self.range_min = 0.2
-        self.range_max = 1.5
+        self.range_max = 5.0
 
-        #self.setServo(self.servo_id, (self.right - self.left) / 2 + self.left)
-        self.setServo(self.servo_id, self.right)
+        self.setServo(self.servo_id, (self.right - self.left) / 2 + self.left)
+        #self.Serializer.servo(self.servo_id, self.right)
         self.servo_direction = 1
         self.count = 0
         
@@ -75,37 +75,37 @@ class base_scan(Thread):
         ir = None
         while ir == None:
             rospy.loginfo("Getting IR Reading: " + str(ir))
-            ir = self.SharpGP2Y0A0(self.getAnalog(self.ir_id))
+            ir = self.SharpGP2Y0A0(self.Serializer.sensor(self.ir_id))
         rospy.loginfo("Initial IR Reading: " + str(ir))
         
     def run(self):
         rosRate = rospy.Rate(self.rate)
-        rospy.loginfo("Executing base scan at: " + str(self.rate) + " Hz")
-        
+        rospy.loginfo("Executing base scan at: " + str(self.rate) + " Hz")      
         
         while not rospy.is_shutdown():
             
             ranges = list()
             
+            if self.servo_direction > 0:
+                #self.Serializer.servo(self.servo_id, self.left + i * self.servo_increment)
+                self.Serializer.servo(self.servo_id, self.left)
+            else:
+                #self.Serializer.servo(self.servo_id, self.right - i * self.servo_increment)
+                self.Serializer.servo(self.servo_id, self.right)
+            
+            #time.sleep(0.05)
 
             for i in range(self.n_samples):
                 #sonar = self.getPing(self.sensor_id, False)
-                ir = self.SharpGP2Y0A0(self.getAnalog(self.ir_id))
+                start = time.time()
+                ir = self.SharpGP2Y0A0(self.Serializer.sensor(self.ir_id))
                 ranges.append(ir / 100.0)
-                
-                if self.servo_direction > 0:
-                    self.setServo(self.servo_id, self.left + i * self.servo_increment)
-                    #self.setServo(self.servo_id, self.left)
-                else:
-                    self.setServo(self.servo_id, self.right - i * self.servo_increment)
-                    #self.setServo(self.servo_id, self.right)
+                delta = time.time() - start
+                #rospy.loginfo("Delta" + str(delta))
+                time.sleep(max(0, 0.05 - delta))
 
                 #time.sleep(0.03)
 
-#            if self.servo_direction > 0:
-#                self.setServo(self.servo_id, self.right)
-#            else:
-#                self.setServo(self.servo_id, self.left)
 #                
 #            for i in range(self.n_samples):
 #                #sonar = self.getPing(self.sensor_id, False)
@@ -114,7 +114,7 @@ class base_scan(Thread):
 #                #rospy.loginfo("IR: " + str(ir))
 #                #time.sleep(0.03333)           
                         
-            if self.servo_direction > 0:
+            if self.servo_direction < 0:
                 ranges.reverse()
                 
             scan = LaserScan()
@@ -126,7 +126,7 @@ class base_scan(Thread):
             scan.scan_time = self.rate
             scan.range_min = self.range_min
             scan.range_max = self.range_max
-            scan.ranges = ranges    
+            scan.ranges = ranges
             self.scanPub.publish(scan)
             
             self.servo_direction *= -1
@@ -191,7 +191,13 @@ class base_scan(Thread):
         #rospy.loginfo("Sensor Data: " + str(data.value))
         
     def SharpGP2Y0A0(self, reading):
-        range = 7140.66 * pow(reading + 1, -0.87507)
+        if reading <= 90:
+            range = 500 # Max range is actually 150 cm
+        else:
+            try:
+                range = (11341 / (reading - 17.562)) - 3
+            except:
+                range = 150
         return range
     
 

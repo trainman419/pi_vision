@@ -1,6 +1,7 @@
+#!/usr/bin/env python
+
 """
-    Example 1: Read values from a number of analog and digital sensors and control
-    one or more servos.
+    Test sample rates on various Serializer sensors.
     
     The Pi Robot Project: http://www.pirobot.org
     Copyright (c) 2010 Patrick Goebel.  All right reserved.
@@ -21,11 +22,14 @@
     http://www.roboticsconnection.com/multimedia/docs/Serializer_3.0_UserGuide.pdf
 """
 
-import serializer as Serializer
+import serializer_driver as Serializer
 import time, os
 
 def SharpGP2Y0A0(reading):
-    range = 7140.66 * pow(reading + 1, -0.87507) - 10
+    if reading <= 90:
+        range = 150 # Max range
+    else:
+        range = (11341 / (reading - 17.562)) - 3
     return range
     
 if os.name == "posix":
@@ -52,35 +56,46 @@ print "Baudrate", mySerializer.get_baud()
 myPing = Serializer.Ping(mySerializer, 4)
 myIR = Serializer.GP2D12(mySerializer, 4)
 
-print "Moving servo on GPIO pin 9 (servo ID 2)", mySerializer.servo(2, -80)
+print "Moving servo on GPIO pin 9 (servo ID 2)", mySerializer.servo(2, 0)
+servo_direction = 1
 time.sleep(1.5)
 
 count = 0
 clock = 0
 data = list()
+readings = list()
 times = list()
-mySerializer.servo(2, 60)
-start = time.clock()
-for i in range(30):
 
-    #print "All Analog Sensor Values:", mySerializer.get_all_analog()
-    #print "Analog values from the cache:", mySerializer.analog_sensor_cache
-    #print "Serializer voltage from the cache", mySerializer.voltage(cached=True)
-    #print "Ping Sonar reading on digital pin 4:", mySerializer.pping(4)
-    #print "Ping reading using the Ping class and reading from the cache:", myPing.value(cached=True)
-    #print "Sharp IR reading using the Sharp class on analog pin 4:", myIR.value()
-    #print "Sharp IR reading from cache:", myIR.value(cached=True)
+for s in range(1):
+#    if servo_direction < 1:
+#        mySerializer.servo(2, 60)
+#    else:
+#        mySerializer.servo(2, -80)
+#    servo_direction *= -1
+        
+    start_test = time.time()
+    for i in range(35):
+        start_reading = time.time()
+        #print "All Analog Sensor Values:", mySerializer.get_all_analog()
+        #print "Analog values from the cache:", mySerializer.analog_sensor_cache
+        #print "Serializer voltage from the cache", mySerializer.voltage(cached=True)
+        #print "Ping Sonar reading on digital pin 4:", mySerializer.pping(4)
+        #print "Ping reading using the Ping class and reading from the cache:", myPing.value(cached=True)
+        #print "Sharp IR reading using the Sharp class on analog pin 4:", myIR.value()
+        #print "Sharp IR reading from cache:", myIR.value(cached=True)
+        reading = mySerializer.sensor(3)
+        readings.append(reading)
+        data.append(SharpGP2Y0A0(reading))
+        delta = time.time() - start_reading
+        times.append(delta)
+        count += 1
+        clock += delta
     
-    data.append(SharpGP2Y0A0(mySerializer.sensor(3)))
-    #delta = time.clock() - start
-    #times.append(delta)
-    #count += 1
-    #clock += delta
-
-#print "Ave Time:", clock / count
-print "Time:", time.clock() - start
-print data
-#print times
+    print "Ave Time:", clock / count
+    print "Total Time:", time.time() - start_test
+    print data
+    print readings
+    print times
 print "\nTesting completed, shutting down."
 
 mySerializer.stop()

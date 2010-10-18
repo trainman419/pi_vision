@@ -26,6 +26,7 @@ from threading import Thread, Event
 
 from math import sin,cos,pi
 from datetime import datetime
+import time
 
 from geometry_msgs.msg import Quaternion
 from geometry_msgs.msg import Twist
@@ -46,7 +47,7 @@ class base_controller(Thread):
         self.mySerializer = Serializer
 
         # Parameters
-        self.rate = float(rospy.get_param("~base_controller_rate", 20.0))
+        self.rate = float(rospy.get_param("~base_controller_rate", 10))
         self.ticks_meter = float(self.mySerializer.ticks_per_meter)
         self.wheel_track = float(self.mySerializer.wheel_track)
         self.gear_reduction = float(self.mySerializer.gear_reduction)
@@ -57,7 +58,7 @@ class base_controller(Thread):
         self.x = 0.                  # position in xy plane
         self.y = 0.
         self.th = 0.                 # rotation in radians
-        self.last_time = rospy.Time.now() # time for determining dx/dy
+        self.last_time = time.time() # time for determining dx/dy
 
         # subscriptions
         rospy.Subscriber("cmd_vel", Twist, self.cmdVelCallback)
@@ -73,10 +74,17 @@ class base_controller(Thread):
         
         old_left = old_right = 0
         bad_encoder_count = 0
+        moving = False
         
         while not rospy.is_shutdown() and not self.finished.isSet():
             rosRate.sleep()
-            current_time = rospy.Time.now()
+            
+            current_time = time.time()
+            
+#            if moving == False:
+#                rospy.loginfo("GO!")
+#                self.mySerializer.travel_distance(0.5, 0.1)
+#                moving = True
 
             # read encoders
             try:
@@ -86,7 +94,7 @@ class base_controller(Thread):
                 bad_encoder_count += 1
                 continue
 
-            dt = (current_time - self.last_time).to_sec()
+            dt = (current_time - self.last_time)
             self.last_time = current_time
             
             # calculate odometry
@@ -135,7 +143,7 @@ class base_controller(Thread):
 
             odom = Odometry()
             odom.header.frame_id = "odom"
-            odom.header.stamp = current_time
+            odom.header.stamp = rospy.Time.now()
             odom.pose.pose.position.x = self.x
             odom.pose.pose.position.y = self.y
             odom.pose.pose.position.z = 0

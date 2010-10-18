@@ -94,13 +94,15 @@ class SerializerROS():
         self.mySerializer.wheel_diameter = rospy.get_param("~wheel_diameter", 0.127)
         self.mySerializer.wheel_track = rospy.get_param("~wheel_track", 0.325)
         self.mySerializer.encoder_resolution = rospy.get_param("~encoder_resolution", 624)
-              
-        # Create the and start the base controller.
-        self.base_controller = base_controller(self.mySerializer, "Serializer PID")
-        self.base_controller.start()
         
+        # Create and start the base scanner.      
         self.base_scan = base_scan(self.mySerializer, "Base Sonar Scan")
         self.base_scan.start()
+        time.sleep(2)
+        
+        # Create and start the base controller.
+        self.base_controller = base_controller(self.mySerializer, "Serializer PID")
+        self.base_controller.start()
         
         while not rospy.is_shutdown():
             if self.publish_sensors:
