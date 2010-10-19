@@ -96,8 +96,8 @@ class SerializerROS():
         self.mySerializer.encoder_resolution = rospy.get_param("~encoder_resolution", 624)
         
         # Create and start the base scanner.      
-        self.base_scan = base_scan(self.mySerializer, "Base Sonar Scan")
-        self.base_scan.start()
+#        self.base_scan = base_scan(self.mySerializer, "Base Sonar Scan")
+#        self.base_scan.start()
         time.sleep(2)
         
         # Create and start the base controller.
