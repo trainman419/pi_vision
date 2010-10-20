@@ -1150,30 +1150,30 @@ class GP2D12():
 """ Basic test for connectivity """
 if __name__ == "__main__":
     if os.name == "posix":
-        portName = "/dev/ttyUSB0"
-        #portName = "/dev/rfcomm0" # For bluetooth on Linux
+        #portName = "/dev/ttyUSB0"
+        portName = "/dev/rfcomm0" # For bluetooth on Linux
         # Note: On Linux, after connecting to the Bluetooth adapter, run the command
         # sudo rfcomm bind /dev/rfcomm0
     else:
         portName = "COM43" # Windows style COM port.
         
-    baudRate = 57600
+    baudRate = 19200
   
-    mySerializer = Serializer(port=portName, baudrate=baudRate, timeout=0.5)
+    mySerializer = Serializer(port=portName, baudrate=baudRate, timeout=5)
     mySerializer.connect()
     
     print "Firmware Version", mySerializer.fw()
-#    print "Units", mySerializer.get_units()
-#    print "Baudrate", mySerializer.get_baud()
-#    print "VPID", mySerializer.get_vpid()
-#    print "DPID", mySerializer.get_dpid()
-#    print "Encoder ticks per meter", mySerializer.ticks_per_meter
-#    print "Voltage", mySerializer.voltage()
-    mySerializer.stop()
+    print "Units", mySerializer.get_units()
+    print "Baudrate", mySerializer.get_baud()
+    print "VPID", mySerializer.get_vpid()
+    print "DPID", mySerializer.get_dpid()
+    print "Encoder ticks per meter", mySerializer.ticks_per_meter
+    print "Voltage", mySerializer.voltage()
+    #mySerializer.stop()
     #mySerializer.rotate(math.pi * 2, 0.4)
-    while True:
-        print mySerializer.sensor(3)
-        time.sleep(0.05)
+#    while True:
+#        print mySerializer.sensor(3)
+#        time.sleep(0.05)
     
     print "Connection test successful, now shutting down...",
     
