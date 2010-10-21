@@ -76,7 +76,7 @@ class SerializerROS():
         rospy.Service('SetServo', SetServo ,self.SetServoHandler)
         rospy.Service('Rotate', Rotate, self.RotateHandler)
         rospy.Service('TravelDistance', TravelDistance, self.TravelDistanceHandler)
-        rospy.Service('GetAnalog', GetAnalog, self.GetAnalogHandler)
+        #rospy.Service('GetAnalog', GetAnalog, self.GetAnalogHandler)
         rospy.Service('Ping', Ping, self.PingHandler)
         rospy.Service('Voltage', Voltage, self.VoltageHandler)
         rospy.Service('GP2D12', GP2D12, self.GP2D12Handler)
@@ -174,8 +174,8 @@ class SerializerROS():
         self.mySerializer.travel_distance(req.distance, req.velocity)
         return TravelDistanceResponse()
     
-    def GetAnalogHandler(self, req):
-        return GetAnalogResponse(self.mySerializer.get_analog(req.pin))
+#    def GetAnalogHandler(self, req):
+#        return GetAnalogResponse(self.mySerializer.get_analog(req.pin))
     
     def PingHandler(self, req):
         try:
