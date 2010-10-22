@@ -5,13 +5,13 @@ import struct
 import roslib.msg
 
 class SensorState(roslib.message.Message):
-  _md5sum = "44860e07301dfb37702ea8848351bb12"
+  _md5sum = "c775d5ae64f1f355fcb3c88b89468dd0"
   _type = "serializer/SensorState"
   _has_header = True #flag to mark the presence of a Header object
   _full_text = """Header header
 
 string[] name
-float64[] value
+float32[] value
 
 ================================================================================
 MSG: roslib/Header
@@ -33,7 +33,7 @@ string frame_id
 
 """
   __slots__ = ['header','name','value']
-  _slot_types = ['Header','string[]','float64[]']
+  _slot_types = ['Header','string[]','float32[]']
 
   def __init__(self, *args, **kwds):
     """
@@ -88,7 +88,7 @@ string frame_id
         buff.write(struct.pack('<I%ss'%length, length, val1))
       length = len(self.value)
       buff.write(_struct_I.pack(length))
-      pattern = '<%sd'%length
+      pattern = '<%sf'%length
       buff.write(struct.pack(pattern, *self.value))
     except struct.error, se: self._check_types(se)
     except TypeError, te: self._check_types(te)
@@ -128,7 +128,7 @@ string frame_id
       start = end
       end += 4
       (length,) = _struct_I.unpack(str[start:end])
-      pattern = '<%sd'%length
+      pattern = '<%sf'%length
       start = end
       end += struct.calcsize(pattern)
       self.value = struct.unpack(pattern, str[start:end])
@@ -158,7 +158,7 @@ string frame_id
         buff.write(struct.pack('<I%ss'%length, length, val1))
       length = len(self.value)
       buff.write(_struct_I.pack(length))
-      pattern = '<%sd'%length
+      pattern = '<%sf'%length
       buff.write(self.value.tostring())
     except struct.error, se: self._check_types(se)
     except TypeError, te: self._check_types(te)
@@ -200,10 +200,10 @@ string frame_id
       start = end
       end += 4
       (length,) = _struct_I.unpack(str[start:end])
-      pattern = '<%sd'%length
+      pattern = '<%sf'%length
       start = end
       end += struct.calcsize(pattern)
-      self.value = numpy.frombuffer(str[start:end], dtype=numpy.float64, count=length)
+      self.value = numpy.frombuffer(str[start:end], dtype=numpy.float32, count=length)
       return self
     except struct.error, e:
       raise roslib.message.DeserializationError(e) #most likely buffer underfill

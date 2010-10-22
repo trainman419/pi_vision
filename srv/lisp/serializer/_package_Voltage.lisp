@@ -1,3 +1,4 @@
 (in-package serializer-srv)
-(export '(VALUE-VAL
+(export '(CACHED-VAL
+          VALUE-VAL
 ))

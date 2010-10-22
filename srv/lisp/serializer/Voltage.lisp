@@ -7,13 +7,19 @@
 ;//! \htmlinclude Voltage-request.msg.html
 
 (defclass <Voltage-request> (ros-message)
-  ()
+  ((cached
+    :reader cached-val
+    :initarg :cached
+    :type boolean
+    :initform nil))
 )
 (defmethod serialize ((msg <Voltage-request>) ostream)
   "Serializes a message object of type '<Voltage-request>"
+    (write-byte (ldb (byte 8 0) (if (slot-value msg 'cached) 1 0)) ostream)
 )
 (defmethod deserialize ((msg <Voltage-request>) istream)
   "Deserializes a message object of type '<Voltage-request>"
+  (setf (slot-value msg 'cached) (not (zerop (read-byte istream))))
   msg
 )
 (defmethod ros-datatype ((msg (eql '<Voltage-request>)))
@@ -21,16 +27,18 @@
   "serializer/VoltageRequest")
 (defmethod md5sum ((type (eql '<Voltage-request>)))
   "Returns md5sum for a message object of type '<Voltage-request>"
-  "e4da51e86d3bac963ee2bb1f41031407")
+  "e83d0a14c1ccae2cbe9da2c6c6a2148f")
 (defmethod message-definition ((type (eql '<Voltage-request>)))
   "Returns full string definition for message of type '<Voltage-request>"
-  (format nil "~%~%"))
+  (format nil "bool cached~%~%"))
 (defmethod serialization-length ((msg <Voltage-request>))
   (+ 0
+     1
 ))
 (defmethod ros-message-to-list ((msg <Voltage-request>))
   "Converts a ROS message object to a list"
   (list '<Voltage-request>
+    (cons ':cached (cached-val msg))
 ))
 ;//! \htmlinclude Voltage-response.msg.html
 
@@ -38,16 +46,33 @@
   ((value
     :reader value-val
     :initarg :value
-    :type fixnum
-    :initform 0))
+    :type float
+    :initform 0.0))
 )
 (defmethod serialize ((msg <Voltage-response>) ostream)
   "Serializes a message object of type '<Voltage-response>"
-    (write-byte (ldb (byte 8 0) (slot-value msg 'value)) ostream)
+  (let ((bits (roslisp-utils:encode-double-float-bits (slot-value msg 'value))))
+    (write-byte (ldb (byte 8 0) bits) ostream)
+    (write-byte (ldb (byte 8 8) bits) ostream)
+    (write-byte (ldb (byte 8 16) bits) ostream)
+    (write-byte (ldb (byte 8 24) bits) ostream)
+    (write-byte (ldb (byte 8 32) bits) ostream)
+    (write-byte (ldb (byte 8 40) bits) ostream)
+    (write-byte (ldb (byte 8 48) bits) ostream)
+    (write-byte (ldb (byte 8 56) bits) ostream))
 )
 (defmethod deserialize ((msg <Voltage-response>) istream)
   "Deserializes a message object of type '<Voltage-response>"
-  (setf (ldb (byte 8 0) (slot-value msg 'value)) (read-byte istream))
+  (let ((bits 0))
+    (setf (ldb (byte 8 0) bits) (read-byte istream))
+    (setf (ldb (byte 8 8) bits) (read-byte istream))
+    (setf (ldb (byte 8 16) bits) (read-byte istream))
+    (setf (ldb (byte 8 24) bits) (read-byte istream))
+    (setf (ldb (byte 8 32) bits) (read-byte istream))
+    (setf (ldb (byte 8 40) bits) (read-byte istream))
+    (setf (ldb (byte 8 48) bits) (read-byte istream))
+    (setf (ldb (byte 8 56) bits) (read-byte istream))
+    (setf (slot-value msg 'value) (roslisp-utils:decode-double-float-bits bits)))
   msg
 )
 (defmethod ros-datatype ((msg (eql '<Voltage-response>)))
@@ -55,13 +80,13 @@
   "serializer/VoltageResponse")
 (defmethod md5sum ((type (eql '<Voltage-response>)))
   "Returns md5sum for a message object of type '<Voltage-response>"
-  "e4da51e86d3bac963ee2bb1f41031407")
+  "e83d0a14c1ccae2cbe9da2c6c6a2148f")
 (defmethod message-definition ((type (eql '<Voltage-response>)))
   "Returns full string definition for message of type '<Voltage-response>"
-  (format nil "uint8 value~%~%~%"))
+  (format nil "float64 value~%~%~%"))
 (defmethod serialization-length ((msg <Voltage-response>))
   (+ 0
-     1
+     8
 ))
 (defmethod ros-message-to-list ((msg <Voltage-response>))
   "Converts a ROS message object to a list"
