@@ -142,14 +142,14 @@ class base_controller(Thread):
 #                )
 
             odom = Odometry()
-            odom.header.frame_id = "odom"
+            odom.header.frame_id = "/odom"
             odom.header.stamp = rospy.Time.now()
             odom.pose.pose.position.x = self.x
             odom.pose.pose.position.y = self.y
             odom.pose.pose.position.z = 0
             odom.pose.pose.orientation = quaternion
 
-            odom.child_frame_id = "base_link"
+            odom.child_frame_id = "/base_link"
             odom.twist.twist.linear.x = vxy
             odom.twist.twist.linear.y = 0
             odom.twist.twist.angular.z = vth

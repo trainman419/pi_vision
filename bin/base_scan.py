@@ -36,7 +36,7 @@ class base_scan(Thread):
         self.finished = Event()
         #rospy.init_node("base_scan")
         self.Serializer = Serializer
-        self.scanPub = rospy.Publisher('base_scan', LaserScan)
+        self.scanPub = rospy.Publisher('/base_scan', LaserScan)
         #self.scanBroadcaster = TransformBroadcaster()
         #rospy.Subscriber("sensors", SensorState, self.sensorCallback)
         
@@ -119,7 +119,7 @@ class base_scan(Thread):
                 
             scan = LaserScan()
             scan.header.stamp = rospy.Time.now()
-            scan.header.frame_id = "base_laser"
+            scan.header.frame_id = "/base_laser"
             scan.angle_min = self.angle_min
             scan.angle_max = self.angle_max
             scan.angle_increment = self.angle_increment
