@@ -129,8 +129,8 @@ class base_controller(Thread):
                 (self.x, self.y, 0), 
                 (quaternion.x, quaternion.y, quaternion.z, quaternion.w),
                 rospy.Time.now(),
-                "base_link",
-                "odom"
+                "/base_link",
+                "/odom"
                 )
             
 #            self.odomBroadcaster.sendTransform(

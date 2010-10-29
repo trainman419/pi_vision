@@ -99,8 +99,12 @@ class Serializer():
             time.sleep(1)
             self.port.write('cfg baud\r')
             test = (self.port.readline(eol='>')[0:-3]).strip()
-            if test != str(self.baudrate):       
-                raise SerialException
+            if test != str(self.baudrate):
+                time.sleep(1)
+                self.port.write('cfg baud\r')
+                test = (self.port.readline(eol='>')[0:-3]).strip()
+                if test != str(self.baudrate):
+                    raise SerialException
             print "Connected at", self.baudrate, "baud."
 
             # Take care of the UNITS, VPID and DPID parameters for PID drive control.
