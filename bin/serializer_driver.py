@@ -1166,6 +1166,8 @@ if __name__ == "__main__":
     mySerializer = Serializer(port=portName, baudrate=baudRate, timeout=5)
     mySerializer.connect()
     
+    time.sleep(2)
+    
     print "Firmware Version", mySerializer.fw()
     print "Units", mySerializer.get_units()
     print "Baudrate", mySerializer.get_baud()
@@ -1175,9 +1177,9 @@ if __name__ == "__main__":
     print "Voltage", mySerializer.voltage()
     #mySerializer.stop()
     #mySerializer.rotate(math.pi * 2, 0.4)
-#    while True:
-#        print mySerializer.sensor(3)
-#        time.sleep(0.05)
+    while True:
+        print mySerializer.sensor(3)
+        time.sleep(0.2)
     
     print "Connection test successful, now shutting down...",
     

@@ -38,8 +38,7 @@ import sys
 import random
 
 class base_controller(Thread):
-    """ Controller to handle movement & odometry feedback for a differential 
-            drive mobile base. """
+    """ Controller to handle movement & odometry feedback for a differential drive mobile base. """
     def __init__(self, Serializer, name):
         Thread.__init__ (self)
         self.finished = Event()
@@ -129,8 +128,8 @@ class base_controller(Thread):
                 (self.x, self.y, 0), 
                 (quaternion.x, quaternion.y, quaternion.z, quaternion.w),
                 rospy.Time.now(),
-                "/base_link",
-                "/odom"
+                "base_link",
+                "odom"
                 )
             
 #            self.odomBroadcaster.sendTransform(
@@ -142,14 +141,14 @@ class base_controller(Thread):
 #                )
 
             odom = Odometry()
-            odom.header.frame_id = "/odom"
+            odom.header.frame_id = "odom"
             odom.header.stamp = rospy.Time.now()
             odom.pose.pose.position.x = self.x
             odom.pose.pose.position.y = self.y
             odom.pose.pose.position.z = 0
             odom.pose.pose.orientation = quaternion
 
-            odom.child_frame_id = "/base_link"
+            odom.child_frame_id = "base_link"
             odom.twist.twist.linear.x = vxy
             odom.twist.twist.linear.y = 0
             odom.twist.twist.angular.z = vth
