@@ -62,6 +62,11 @@ class base_controller(Thread):
         # subscriptions
         rospy.Subscriber("cmd_vel", Twist, self.cmdVelCallback)
         #rospy.Subscriber("cmd_pose", Pose, self.cmdPoseCallback)
+        
+        # Clear any old odometry info
+        self.mySerializer.clear_encoder([1, 2])
+        
+        # Set up the odometry broadcaster
         self.odomPub = rospy.Publisher('odom', Odometry)
         self.odomBroadcaster = TransformBroadcaster()
         
@@ -191,7 +196,7 @@ class base_controller(Thread):
         # Set motor speeds in meters per second.
         #rospy.loginfo("")
         if left < 0 and right < 0:
-            rospy.loginfo("GOING BACKWARDS!!!!!!!!!!!!!!!!!!!!!!!!")
+            rospy.loginfo("GOING BACKWARDS!!!")
         #rospy.loginfo("Left/Right: " + str(left) + "/" + str(right))
         self.mySerializer.mogo_m_per_s([1, 2], [left, right])
         
