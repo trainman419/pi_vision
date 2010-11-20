@@ -1,5 +1,4 @@
 port: /dev/ttyUSB0
-#baud: 57600
 #port: /dev/rfcomm0
 baud: 19200
 timeout: 1
@@ -22,5 +21,5 @@ DPID_B: 5
 
 publish_sensors: False
 
-#'analog': { 'voltage': {'pin': 5, 'type': 'Voltage'}, 'head_ir': {'pin': 4, 'type': 'GP2D12'}, 'drive_current': {'pin': 1, 'type': 'PhidgetsCurrent'} },
-#sensors: { 'digital': {'base_sonar': {'pin': 5, 'type': 'Ping'} } }
+#analog: { voltage: {pin: 5, type: Voltage}, head_ir: {pin: 4, type: GP2D12}, drive_current: {pin: 1, type: PhidgetsCurrent} },
+#sensors: { digital: {base_sonar: {pin: 5, type: Ping} } }
