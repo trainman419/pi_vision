@@ -1,13 +1,13 @@
 <package>
   <description brief="serializer">
 
-     serializer
+     ROS Package for the Serializer microcontroller made by the Robotics Connection
 
   </description>
   <author>Patrick Goebel</author>
   <license>BSD</license>
   <review status="unreviewed" notes=""/>
-  <url>http://ros.org/wiki/serializer</url>
+  <url>https://pi-robot-ros-pkg.googlecode.com/svn/trunk/pi-robot-ros-stack/serializer</url>
   <depend package="roscpp"/>
   <depend package="rospy"/>
   <depend package="std_msgs"/>
