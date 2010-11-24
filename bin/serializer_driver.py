@@ -47,41 +47,62 @@ class Serializer():
     '''    
     N_ANALOG_PORTS = 6
     N_DIGITAL_PORTS = 12
-    UNITS = 0                   # 1 is inches, 0 is metric (cm for sensors, meters for wheels measurements) and 2 is "raw"
-    WHEEL_DIAMETER = 0.132      # meters (5.0 inches) meters or inches depending on UNITS
-    WHEEL_TRACK = 0.3365        # meters (12.8 inches) meters or inches units depending on UNITS
-    ENCODER_RESOLUTION = 624    # encoder ticks per revolution of the wheel without external gears
-    GEAR_REDUCTION = 1.667      # This is for external gearing if you have any.  In this case there is a 60/36 tooth gear ratio.
-    
-    ENCODER_TYPE = 1            # 1 = quadrature, 0 = single
-    MOTORS_REVERSED = True      # Multiplies encoder counts by -1 if the motor rotation direction is reversed.
-
-    VPID_P = 2   # Proportional
-    VPID_I = 0   # Integral
-    VPID_D = 5   # Derivative                                                                               
-    VPID_L = 45  # Loop: this together with UNITS and WHEEL_DIAMETER determines real-world velocity
-    
-    DPID_P = 1   # Proportional
-    DPID_I = 0   # Integral
-    DPID_D = 0   # Derivative 
-    DPID_A = 5   # Acceleration
-    DPID_B = 10  # Dead band
     
     MILLISECONDS_PER_PID_LOOP = 1.6 # Do not change this!  It is a fixed property of the Serializer PID controller.
-    LOOP_INTERVAL = VPID_L * MILLISECONDS_PER_PID_LOOP / 1000 # in seconds
     
-    INIT_PID = True # Set to True if you want to update UNITS, VPID and DPID parameters.  Otherwise, those stored in the Serializer's firmware are used.**
+    default_pid_params = dict()
+    pi_robot = False
+    if pi_robot:
+        default_pid_params['units'] = 0                   # 1 is inches, 0 is metric (cm for sensors, meters for wheels measurements) and 2 is "raw"
+        default_pid_params['wheel_diameter'] = 0.132      # meters (5.0 inches) meters or inches depending on UNITS
+        default_pid_params['wheel_track'] = 0.3365        # meters (12.8 inches) meters or inches units depending on UNITS
+        default_pid_params['encoder_resolution'] = 624    # encoder ticks per revolution of the wheel without external gears
+        default_pid_params['gear_reduction'] = 1.667      # This is for external gearing if you have any.  In this case there is a 60/36 tooth gear ratio.
+        
+        default_pid_params['encoder_type'] = 1            # 1 = quadrature, 0 = single
+        default_pid_params['motors_reversed'] = False      # Multiplies encoder counts by -1 if the motor rotation direction is reversed.
+    
+        default_pid_params['init_pid'] = False # Set to True if you want to update UNITS, VPID and DPID parameters.  Otherwise, those stored in the Serializer's firmware are used.**
+    
+        default_pid_params['VPID_P'] = 2   # Proportional
+        default_pid_params['VPID_I'] = 0   # Integral
+        default_pid_params['VPID_D'] = 5   # Derivative                                                                               
+        default_pid_params['VPID_L'] = 45  # Loop: this together with UNITS and WHEEL_DIAMETER determines real-world velocity
+        
+        default_pid_params['DPID_P'] = 1   # Proportional
+        default_pid_params['DPID_I'] = 0   # Integral
+        default_pid_params['DPID_D'] = 0   # Derivative 
+        default_pid_params['DPID_A'] = 5   # Acceleration
+        default_pid_params['DPID_B'] = 10  # Dead band
     
     BAD_VALUE = -999
     
-    def __init__(self, port="/dev/ttyUSB0", baudrate=19200, timeout=0.5): 
+    def __init__(self, pid_params=default_pid_params, port="/dev/ttyUSB0", baudrate=19200, timeout=0.5):
         self.port = port
         self.baudrate = baudrate
         self.timeout = timeout
-        self.wheel_diameter = self.WHEEL_DIAMETER
-        self.wheel_track = self.WHEEL_TRACK
-        self.encoder_resolution = self.ENCODER_RESOLUTION
-        self.gear_reduction = self.GEAR_REDUCTION
+        try:
+            self.wheel_diameter = pid_params['wheel_diameter']
+            self.wheel_track = pid_params['wheel_track']
+            self.encoder_resolution = pid_params['encoder_resolution']
+            self.gear_reduction = pid_params['gear_reduction']
+            self.motors_reversed = pid_params['motors_reversed']
+            self.init_pid = pid_params['init_pid']
+    
+            self.units = pid_params['units']
+            self.VPID_P = pid_params['VPID_P']
+            self.VPID_I = pid_params['VPID_I']
+            self.VPID_D  = pid_params['VPID_D']
+            self.VPID_L = pid_params['VPID_L']
+            self.DPID_P = pid_params['DPID_P']
+            self.DPID_I = pid_params['DPID_I']
+            self.DPID_D = pid_params['DPID_D']
+            self.DPID_A = pid_params['DPID_A']
+            self.DPID_B = pid_params['DPID_B']
+        except:
+            print "Some or all PID parameters are not set or missing."
+            os._exit(1)
+        
         self.loop_interval = None
         self.ticks_per_meter = None
         self.messageLock = threading.Lock()
@@ -105,10 +126,10 @@ class Serializer():
                 test = (self.port.readline(eol='>')[0:-3]).strip()
                 if test != str(self.baudrate):
                     raise SerialException
-            print "Connected at", self.baudrate, "baud."
-
+            print "Connected at", self.baudrate, "baud.  Current voltage:", self.voltage()
+            
             # Take care of the UNITS, VPID and DPID parameters for PID drive control.
-            if self.INIT_PID:
+            if self.init_pid:
                 self.init_PID()
             else:
                 self.units = self.get_units()
@@ -391,7 +412,7 @@ class Serializer():
             print "Encoder count did not match ID count for ids", id
             raise SerialException
         else:
-            if self.MOTORS_REVERSED:
+            if self.motors_reversed:
                 for i in range(len(id)):
                     values[i] = -1 * values[i]          
         return values
@@ -1162,10 +1183,11 @@ if __name__ == "__main__":
         portName = "COM43" # Windows style COM port.
         
     baudRate = 19200
-  
+    #pid_params = dict()
+    #pid_params['init_pid'] = False,
     mySerializer = Serializer(port=portName, baudrate=baudRate, timeout=5)
     mySerializer.connect()
-    
+ 
     time.sleep(2)
     
     print "Firmware Version", mySerializer.fw()
@@ -1175,11 +1197,6 @@ if __name__ == "__main__":
     print "DPID", mySerializer.get_dpid()
     print "Encoder ticks per meter", mySerializer.ticks_per_meter
     print "Voltage", mySerializer.voltage()
-    #mySerializer.stop()
-    #mySerializer.rotate(math.pi * 2, 0.4)
-#    while True:
-#        print mySerializer.sensor(3)
-#        time.sleep(0.2)
     
     print "Connection test successful, now shutting down...",
     

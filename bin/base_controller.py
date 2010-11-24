@@ -24,7 +24,7 @@ import rospy
 
 from threading import Thread, Event
 
-from math import sin,cos,pi
+from math import sin, cos, pi
 from datetime import datetime
 import time
 
@@ -42,15 +42,17 @@ class base_controller(Thread):
     def __init__(self, Serializer, name):
         Thread.__init__ (self)
         self.finished = Event()
+        
         # Handle for the Serializer
         self.mySerializer = Serializer
 
         # Parameters
         self.rate = float(rospy.get_param("~base_controller_rate", 10))
-        self.ticks_meter = float(self.mySerializer.ticks_per_meter)
-        self.wheel_track = float(self.mySerializer.wheel_track)
-        self.gear_reduction = float(self.mySerializer.gear_reduction)
-        
+        self.ticks_per_meter = float(self.mySerializer.ticks_per_meter)
+        self.wheel_track = self.mySerializer.wheel_track
+        self.gear_reduction = self.mySerializer.gear_reduction
+        self.encoder_resolution = self.mySerializer.encoder_resolution
+           
         # internal data        
         self.enc_left = 0            # encoder readings
         self.enc_right = 0
@@ -61,7 +63,6 @@ class base_controller(Thread):
 
         # subscriptions
         rospy.Subscriber("cmd_vel", Twist, self.cmdVelCallback)
-        #rospy.Subscriber("cmd_pose", Pose, self.cmdPoseCallback)
         
         # Clear any old odometry info
         self.mySerializer.clear_encoder([1, 2])
@@ -70,7 +71,7 @@ class base_controller(Thread):
         self.odomPub = rospy.Publisher('odom', Odometry)
         self.odomBroadcaster = TransformBroadcaster()
         
-        rospy.loginfo("Started Base Controller '"+ name +"' for a base of " + str(self.wheel_track) + "m wide with " + str(self.ticks_meter) + " ticks per meter")
+        rospy.loginfo("Started Base Controller '"+ name +"' for a base of " + str(self.wheel_track) + "m wide with " + str(self.ticks_per_meter) + " ticks per meter")
 
     def run(self):
         rosRate = rospy.Rate(self.rate)
@@ -83,12 +84,7 @@ class base_controller(Thread):
         while not rospy.is_shutdown() and not self.finished.isSet():
             rosRate.sleep()
             
-            current_time = time.time()
-            
-#            if moving == False:
-#                rospy.loginfo("GO!")
-#                self.mySerializer.travel_distance(0.5, 0.1)
-#                moving = True
+            current_time = time.time()            
 
             # read encoders
             try:
@@ -102,8 +98,8 @@ class base_controller(Thread):
             self.last_time = current_time
             
             # calculate odometry
-            dleft = (left - self.enc_left) / self.ticks_meter
-            dright = (right - self.enc_right) / self.ticks_meter
+            dleft = (left - self.enc_left) / self.ticks_per_meter
+            dright = (right - self.enc_right) / self.ticks_per_meter
             
             self.enc_left = left
             self.enc_right = right
@@ -136,14 +132,6 @@ class base_controller(Thread):
                 "base_link",
                 "odom"
                 )
-            
-#            self.odomBroadcaster.sendTransform(
-#                (0, 0, 0), 
-#                (0, 0, 0, 1),
-#                rospy.Time.now(),
-#                "odom",
-#                "world"
-#                )
 
             odom = Odometry()
             odom.header.frame_id = "odom"

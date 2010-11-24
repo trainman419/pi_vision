@@ -25,7 +25,7 @@ import serializer_driver as SerializerAPI
 from serializer.msg import SensorState
 from serializer.srv import *
 from base_controller import *
-from base_scan import *
+#from base_scan import * # Experimental PML using hobby servo
 from geometry_msgs.msg import Twist
 import threading, time
 
@@ -35,8 +35,26 @@ class SerializerROS():
         self.port = rospy.get_param("~port", "/dev/ttyUSB0")
         self.baud = int(rospy.get_param("~baud", 57600))
         self.rate = int(rospy.get_param("~sensor_rate", 20))
-        self.publish_sensors = rospy.get_param("~publish_sensors", True)
+        self.publish_sensors = rospy.get_param("~publish_sensors", False)
         self.timeout = rospy.get_param("~timeout", 0.5)
+        self.pid_params = dict()
+        self.pid_params['units'] = rospy.get_param("~units", 0)
+        self.pid_params['wheel_diameter'] = rospy.get_param("~wheel_diameter", 0.132) 
+        self.pid_params['wheel_track'] = rospy.get_param("~wheel_track", 0.3365)
+        self.pid_params['encoder_resolution'] = rospy.get_param("~encoder_resolution", 624) 
+        self.pid_params['gear_reduction'] = rospy.get_param("~gear_reduction", 1.667)
+        self.pid_params['motors_reversed'] = rospy.get_param("~motors_reversed", False)
+        
+        self.pid_params['init_pid'] = rospy.get_param("~init_pid", False)  
+        self.pid_params['VPID_P'] = rospy.get_param("~VPID_P", 2)
+        self.pid_params['VPID_I'] = rospy.get_param("~VPID_I", 0)
+        self.pid_params['VPID_D']  = rospy.get_param("~VPID_D", 5)
+        self.pid_params['VPID_L'] = rospy.get_param("~VPID_L", 45)
+        self.pid_params['DPID_P'] = rospy.get_param("~DPID_P", 1)
+        self.pid_params['DPID_I'] = rospy.get_param("~DPID_I", 0)
+        self.pid_params['DPID_D'] = rospy.get_param("~DPID_D", 0)
+        self.pid_params['DPID_A'] = rospy.get_param("~DPID_A", 5)
+        self.pid_params['DPID_B'] = rospy.get_param("~DPID_B", 5)
                 
         rospy.loginfo("Connected to Serializer on port " + self.port + " at " + str(self.baud) + " baud")
         rospy.loginfo("Publishing Serializer data at " + str(self.rate) + " Hz")
@@ -57,17 +75,18 @@ class SerializerROS():
             self.sensors = dict({})
             self.msg = SensorState()
         
-            print "Publishing Sensors:"
-            try:
-                for sensor, params in self.analog_sensors.iteritems():
-                    print sensor, params
-            except:
-                pass  
-            try:      
-                for sensor, params in self.digital_sensors.iteritems():
-                    print sensor, params
-            except:
-                pass
+            if self.publish_sensors:
+                print "Publishing Sensors:"
+                try:
+                    for sensor, params in self.analog_sensors.iteritems():
+                        print sensor, params
+                except:
+                    pass  
+                try:      
+                    for sensor, params in self.digital_sensors.iteritems():
+                        print sensor, params
+                except:
+                    pass
             
             # The SensorState publisher
             self.sensorStatePub = rospy.Publisher('sensors', SensorState)
@@ -87,13 +106,8 @@ class SerializerROS():
         rosRate = rospy.Rate(self.rate)
         
         # Initialize the Serializer driver
-        self.mySerializer = SerializerAPI.Serializer(self.port, self.baud, self.timeout)
+        self.mySerializer = SerializerAPI.Serializer(self.pid_params, self.port, self.baud, self.timeout)
         self.mySerializer.connect()
-        self.mySerializer.units = rospy.get_param("~units", 0)
-        self.mySerializer.gear_reduction = rospy.get_param("~gear_reduction", 1.667)
-        self.mySerializer.wheel_diameter = rospy.get_param("~wheel_diameter", 0.127)
-        self.mySerializer.wheel_track = rospy.get_param("~wheel_track", 0.325)
-        self.mySerializer.encoder_resolution = rospy.get_param("~encoder_resolution", 624)
         
         # Create and start the base scanner.      
 #        self.base_scan = base_scan(self.mySerializer, "Base Sonar Scan")
