@@ -37,10 +37,14 @@ class SerializerROS():
         self.rate = int(rospy.get_param("~sensor_rate", 20))
         self.publish_sensors = rospy.get_param("~publish_sensors", False)
         self.timeout = rospy.get_param("~timeout", 0.5)
+        self.use_base_controller = rospy.get_param("~use_base_controller", True)
+
+        
         self.pid_params = dict()
         self.pid_params['units'] = rospy.get_param("~units", 0)
         self.pid_params['wheel_diameter'] = rospy.get_param("~wheel_diameter", 0.132) 
         self.pid_params['wheel_track'] = rospy.get_param("~wheel_track", 0.3365)
+        self.pid_params['encoder_type'] = rospy.get_param("~encoder_type", 1) 
         self.pid_params['encoder_resolution'] = rospy.get_param("~encoder_resolution", 624) 
         self.pid_params['gear_reduction'] = rospy.get_param("~gear_reduction", 1.667)
         self.pid_params['motors_reversed'] = rospy.get_param("~motors_reversed", False)
@@ -115,8 +119,9 @@ class SerializerROS():
         time.sleep(2)
         
         # Create and start the base controller.
-        self.base_controller = base_controller(self.mySerializer, "Serializer PID")
-        self.base_controller.start()
+        if self.use_base_controller:
+            self.base_controller = base_controller(self.mySerializer, "Serializer PID")
+            self.base_controller.start()
         
         while not rospy.is_shutdown():
             if self.publish_sensors:

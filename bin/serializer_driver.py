@@ -20,7 +20,7 @@
         
     Basic Usage:
 
-    mySerializer = Serializer(port="COM12", baudrate=19200, timeout=0.05)
+    mySerializer = Serializer(port="/dev/ttyUSB0", baudrate=19200, timeout=0.05)
     mySerializer.connect()
     myPing = Ping(mySerializer, 4)  
     myIR = GP2D12(mySerializer, 4)
@@ -85,6 +85,7 @@ class Serializer():
             self.wheel_diameter = pid_params['wheel_diameter']
             self.wheel_track = pid_params['wheel_track']
             self.encoder_resolution = pid_params['encoder_resolution']
+            self.encoder_type = pid_params['encoder_type']
             self.gear_reduction = pid_params['gear_reduction']
             self.motors_reversed = pid_params['motors_reversed']
             self.init_pid = pid_params['init_pid']
@@ -150,8 +151,8 @@ class Serializer():
             
     def init_PID(self):
         print "Updating Units and PID parameters."
-        self.set_encoder(self.ENCODER_TYPE)
-        self.set_units(self.UNITS)
+        self.set_encoder(self.encoder_type)
+        self.set_units(self.units)
         self.set_vpid(self.VPID_P, self.VPID_I, self.VPID_D, self.VPID_L)
         self.set_dpid(self.DPID_P, self.DPID_I, self.DPID_D, self.DPID_A, self.DPID_B)
 
@@ -506,7 +507,7 @@ class Serializer():
         if type(dist) == int: id = [dist]
         if type(vel) == int: vel = [vel]
         
-        if self.MOTORS_REVERSED:
+        if self.motors_reversed:
             for i in range(len(dist)):
                 dist[i] = -1 * dist[i] 
                 
@@ -983,7 +984,7 @@ class Serializer():
         if type(id) == int: id = [id]
         if type(vel) == int: vel = [vel]
         
-        if self.MOTORS_REVERSED:
+        if self.motors_reversed:
             for i in range(len(vel)):
                 vel[i] = -1 * vel[i]
                       
@@ -1003,7 +1004,7 @@ class Serializer():
             ticks_per_loop = revs_per_second * self.encoder_resolution * self.loop_interval * self.gear_reduction
             spd.append(int(ticks_per_loop))
         
-        if self.MOTORS_REVERSED:
+        if self.motors_reversed:
             for i in range(len(spd)):
                 spd[i] = -1 * spd[i]
 
