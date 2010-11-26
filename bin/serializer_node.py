@@ -120,6 +120,7 @@ class SerializerROS():
         
         # Create and start the base controller.
         if self.use_base_controller:
+            rospy.loginfo("Starting Serialzier base controller...")
             self.base_controller = base_controller(self.mySerializer, "Serializer PID")
             self.base_controller.start()
         
