@@ -51,7 +51,7 @@ class Serializer():
     MILLISECONDS_PER_PID_LOOP = 1.6 # Do not change this!  It is a fixed property of the Serializer PID controller.
     
     default_pid_params = dict()
-    pi_robot = False
+    pi_robot = True
     if pi_robot:
         default_pid_params['units'] = 0                   # 1 is inches, 0 is metric (cm for sensors, meters for wheels measurements) and 2 is "raw"
         default_pid_params['wheel_diameter'] = 0.132      # meters (5.0 inches) meters or inches depending on UNITS
@@ -60,7 +60,7 @@ class Serializer():
         default_pid_params['gear_reduction'] = 1.667      # This is for external gearing if you have any.  In this case there is a 60/36 tooth gear ratio.
         
         default_pid_params['encoder_type'] = 1            # 1 = quadrature, 0 = single
-        default_pid_params['motors_reversed'] = False      # Multiplies encoder counts by -1 if the motor rotation direction is reversed.
+        default_pid_params['motors_reversed'] = True      # Multiplies encoder counts by -1 if the motor rotation direction is reversed.
     
         default_pid_params['init_pid'] = False # Set to True if you want to update UNITS, VPID and DPID parameters.  Otherwise, those stored in the Serializer's firmware are used.**
     
@@ -1198,6 +1198,9 @@ if __name__ == "__main__":
     print "DPID", mySerializer.get_dpid()
     print "Encoder ticks per meter", mySerializer.ticks_per_meter
     print "Voltage", mySerializer.voltage()
+    
+    mySerializer.travel_distance(0.3, 0.15)
+    time.sleep(4)
     
     print "Connection test successful, now shutting down...",
     
