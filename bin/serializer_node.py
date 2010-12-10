@@ -144,9 +144,6 @@ class SerializerROS():
                         self.sensors[sensor] = self.mySerializer.get_io(params['pin'])
                     time.sleep(0.01)
 
-#                self.sensors['head_sonar'] = self.mySerializer.get_Ping(4)
-#                time.sleep(0.05)
-#                self.sensors['head_ir'] = self.mySerializer.get_analog(4)
                 self.msg = SensorState()
                 self.msg.name = list()
                 self.msg.value = list()
