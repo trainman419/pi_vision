@@ -23,7 +23,9 @@ DPID_D: 0
 DPID_A: 5
 DPID_B: 5
 
-publish_sensors: False
+publish_sensors: True
 
-#analog: { voltage: {pin: 5, type: Voltage}, head_ir: {pin: 4, type: GP2D12}, drive_current: {pin: 1, type: PhidgetsCurrent} },
-#sensors: { digital: {base_sonar: {pin: 5, type: Ping} } }
+sensors: {
+   analog: { voltage: {pin: 5, type: Voltage}, drive_current: {pin: 1, type: PhidgetsCurrent} }
+}
+#digital: { base_sonar: {pin: 5, type: Ping} }

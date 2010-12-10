@@ -75,22 +75,18 @@ class SerializerROS():
                 self.digital_sensors = self.sensors['digital']
             except:
                 pass
-            
-            self.sensors = dict({})
-            self.msg = SensorState()
         
-            if self.publish_sensors:
-                print "Publishing Sensors:"
-                try:
-                    for sensor, params in self.analog_sensors.iteritems():
-                        print sensor, params
-                except:
-                    pass  
-                try:      
-                    for sensor, params in self.digital_sensors.iteritems():
-                        print sensor, params
-                except:
-                    pass
+            rospy.loginfo("Publishing Sensors:")
+            try:
+                for sensor, params in self.analog_sensors.iteritems():
+                    rospy.loginfo(sensor + " " + str(params))
+            except:
+                pass  
+            try:      
+                for sensor, params in self.digital_sensors.iteritems():
+                    rospy.loginfo(sensor + " " + str(params))
+            except:
+                pass
             
             # The SensorState publisher
             self.sensorStatePub = rospy.Publisher('sensors', SensorState)
@@ -99,7 +95,7 @@ class SerializerROS():
         rospy.Service('SetServo', SetServo ,self.SetServoHandler)
         rospy.Service('Rotate', Rotate, self.RotateHandler)
         rospy.Service('TravelDistance', TravelDistance, self.TravelDistanceHandler)
-        #rospy.Service('GetAnalog', GetAnalog, self.GetAnalogHandler)
+        rospy.Service('GetAnalog', GetAnalog, self.GetAnalogHandler)
         rospy.Service('Ping', Ping, self.PingHandler)
         rospy.Service('Voltage', Voltage, self.VoltageHandler)
         rospy.Service('GP2D12', GP2D12, self.GP2D12Handler)
@@ -111,18 +107,21 @@ class SerializerROS():
         
         # Initialize the Serializer driver
         self.mySerializer = SerializerAPI.Serializer(self.pid_params, self.port, self.baud, self.timeout)
+        time.sleep(1)
         self.mySerializer.connect()
+        time.sleep(1)
         
-        # Create and start the base scanner.      
+#        # Create and start the base scanner.      
 #        self.base_scan = base_scan(self.mySerializer, "Base Sonar Scan")
 #        self.base_scan.start()
-        time.sleep(2)
         
         # Create and start the base controller.
         if self.use_base_controller:
             rospy.loginfo("Starting Serialzier base controller...")
             self.base_controller = base_controller(self.mySerializer, "Serializer PID")
             self.base_controller.start()
+            
+        self.sensors = dict({})
         
         while not rospy.is_shutdown():
             if self.publish_sensors:
@@ -151,7 +150,7 @@ class SerializerROS():
 #                self.sensors['head_sonar'] = self.mySerializer.get_Ping(4)
 #                time.sleep(0.05)
 #                self.sensors['head_ir'] = self.mySerializer.get_analog(4)
-                
+                self.msg = SensorState()
                 self.msg.name = list()
                 self.msg.value = list()
                            
@@ -165,18 +164,15 @@ class SerializerROS():
                         except:
                             self.msg.value.append(-999.0)
                  
-#                all_analog_sensors = self.mySerializer.sensor([1,2,3,4,5])       
-#                left_encoder, right_encoder = self.mySerializer.get_encoder_count([1, 2])
-#                self.msg.name.append("left_encoder")
-#                self.msg.name.append("right_encoder")
-#                self.msg.value.append(left_encoder)
-#                self.msg.value.append(right_encoder)
+                #all_analog_sensors = self.mySerializer.sensor([1,2,3,4,5])       
+                left_encoder, right_encoder = self.mySerializer.get_encoder_count([1, 2])
+                self.msg.name.append("left_encoder")
+                self.msg.name.append("right_encoder")
+                self.msg.value.append(left_encoder)
+                self.msg.value.append(right_encoder)
                
-                #self.msg.header.frame_id = "sensors"
-                #self.msg.header.stamp = rospy.Time.now()
-                #self.msg.header.seq += 1
-                
-                #rospy.loginfo(self.msg)
+                self.msg.header.frame_id = "sensors"
+                self.msg.header.stamp = rospy.Time.now()     
                 self.sensorStatePub.publish(self.msg)
                 rosRate.sleep()
             else:
@@ -194,8 +190,8 @@ class SerializerROS():
         self.mySerializer.travel_distance(req.distance, req.velocity)
         return TravelDistanceResponse()
     
-#    def GetAnalogHandler(self, req):
-#        return GetAnalogResponse(self.mySerializer.get_analog(req.pin))
+    def GetAnalogHandler(self, req):
+        return GetAnalogResponse(self.mySerializer.get_analog(req.pin))
     
     def PingHandler(self, req):
         try:
@@ -225,4 +221,3 @@ if __name__ == '__main__':
         mySerializer = SerializerROS()
     except rospy.ROSInterruptException:
         pass
-        #self.base.stop()
