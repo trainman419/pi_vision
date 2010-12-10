@@ -160,13 +160,6 @@ class SerializerROS():
                             self.msg.value.append(float(value))
                         except:
                             self.msg.value.append(-999.0)
-                 
-                #all_analog_sensors = self.mySerializer.sensor([1,2,3,4,5])       
-                left_encoder, right_encoder = self.mySerializer.get_encoder_count([1, 2])
-                self.msg.name.append("left_encoder")
-                self.msg.name.append("right_encoder")
-                self.msg.value.append(left_encoder)
-                self.msg.value.append(right_encoder)
                
                 self.msg.header.frame_id = "sensors"
                 self.msg.header.stamp = rospy.Time.now()     
