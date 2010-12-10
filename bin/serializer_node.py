@@ -64,15 +64,12 @@ class SerializerROS():
         rospy.loginfo("Publishing Serializer data at " + str(self.rate) + " Hz")
         
         if self.publish_sensors:
-            self.analog_sensors = dict({})
-            self.digital_sensors = dict({})
-            self.sensors = rospy.get_param("~sensors", dict({}))
             try:
-                self.analog_sensors = self.sensors['analog']
+                self.analog_sensors = rospy.get_param("~analog", dict({}))
             except:
                 pass
             try:
-                self.digital_sensors = self.sensors['digital']
+                self.digital_sensors = rospy.get_param("~digital", dict({}))
             except:
                 pass
         
