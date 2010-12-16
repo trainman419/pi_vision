@@ -1,29 +1,28 @@
 port: /dev/ttyUSB0
-#port: /dev/rfcomm0
 baud: 19200
 timeout: 1
 sensor_rate: 20
-use_base_controller: True
-base_controller_rate: 10
-wheel_diameter: 0.132
-wheel_track: 0.3365
-encoder_type: 1
-encoder_resolution: 624
-gear_reduction: 1.667
-motors_reversed: True
-init_pid: True
-units: 0
-VPID_P: 2
-VPID_I: 0
-VPID_D: 5
-VPID_L: 45
-DPID_P: 1
-DPID_I: 0
-DPID_D: 0
-DPID_A: 5
-DPID_B: 5
+#use_base_controller: True
+#base_controller_rate: 10
+#wheel_diameter: 0.132
+#wheel_track: 0.3365
+#encoder_type: 1
+#encoder_resolution: 624
+#gear_reduction: 1.667
+#motors_reversed: False
+#init_pid: True
+#units: 0
+#VPID_P: 2
+#VPID_I: 0
+#VPID_D: 5
+#VPID_L: 45
+#DPID_P: 1
+#DPID_I: 0
+#DPID_D: 0
+#DPID_A: 5
+#DPID_B: 5
 
-publish_sensors: True
+#publish_sensors: True
 
-analog: { voltage: {pin: 5, type: Voltage}, drive_current: {pin: 1, type: PhidgetsCurrent} }
+#analog: { voltage: {pin: 5, type: Voltage}, drive_current: {pin: 1, type: PhidgetsCurrent} }
 #digital: { base_sonar: {pin: 5, type: Ping} }
