@@ -25,7 +25,6 @@ import serializer_driver as SerializerAPI
 from serializer.msg import SensorState
 from serializer.srv import *
 from base_controller import *
-#from base_scan import * # Experimental PML using hobby servo
 from geometry_msgs.msg import Twist
 import threading, time
 
@@ -33,8 +32,8 @@ class SerializerROS():
     def __init__(self):
         rospy.init_node('serializer')
         self.port = rospy.get_param("~port", "/dev/ttyUSB0")
-        self.baud = int(rospy.get_param("~baud", 57600))
-        self.rate = int(rospy.get_param("~sensor_rate", 20))
+        self.baud = int(rospy.get_param("~baud", 19200))
+        self.rate = int(rospy.get_param("~sensor_rate", 10))
         self.publish_sensors = rospy.get_param("~publish_sensors", False)
         self.timeout = rospy.get_param("~timeout", 0.5)
         self.use_base_controller = rospy.get_param("~use_base_controller", True)
@@ -107,10 +106,6 @@ class SerializerROS():
         time.sleep(1)
         self.mySerializer.connect()
         time.sleep(1)
-        
-#        # Create and start the base scanner.      
-#        self.base_scan = base_scan(self.mySerializer, "Base Sonar Scan")
-#        self.base_scan.start()
         
         # Create and start the base controller.
         if self.use_base_controller:

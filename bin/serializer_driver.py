@@ -51,7 +51,7 @@ class Serializer():
     MILLISECONDS_PER_PID_LOOP = 1.6 # Do not change this!  It is a fixed property of the Serializer PID controller.
     
     default_pid_params = dict()
-    pi_robot = True
+    pi_robot = False                # Special flag set True when using Pi Robot
     if pi_robot:
         default_pid_params['units'] = 0                   # 1 is inches, 0 is metric (cm for sensors, meters for wheels measurements) and 2 is "raw"
         default_pid_params['wheel_diameter'] = 0.132      # meters (5.0 inches) meters or inches depending on UNITS
@@ -203,8 +203,6 @@ class Serializer():
             values = self.recv().split()
             return map(int, values)
         except:
-#            print "execute exception when doing a recv_array"
-#            print sys.exc_info() 
             return None
 
     def execute(self, cmd):
@@ -1184,8 +1182,7 @@ if __name__ == "__main__":
         portName = "COM43" # Windows style COM port.
         
     baudRate = 19200
-    #pid_params = dict()
-    #pid_params['init_pid'] = False,
+
     mySerializer = Serializer(port=portName, baudrate=baudRate, timeout=5)
     mySerializer.connect()
  
@@ -1199,13 +1196,10 @@ if __name__ == "__main__":
     print "Encoder ticks per meter", mySerializer.ticks_per_meter
     print "Voltage", mySerializer.voltage()
     
-    mySerializer.travel_distance(0.3, 0.15)
-    time.sleep(4)
-    
     print "Connection test successful, now shutting down...",
     
     mySerializer.stop()
     mySerializer.close()
     
-    print "Done."
+    print "Shutting down Serializer."
     

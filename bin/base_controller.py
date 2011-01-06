@@ -158,11 +158,7 @@ class base_controller(Thread):
         """ Handle velocity-based movement requests. """
         x = req.linear.x         # m/s
         th = req.angular.z       # rad/s
-        if x > 0.3:
-            rospy.loginfo("X MAX EXCEEDED! " + str(x))
-        if th > 1.0:
-            rospy.loginfo("THETA MAX EXCEEDED! " + str(th))
-        #rospy.loginfo("x/th: " + str(x) + "/" + str(th))
+
         if x == 0:
             # Turn in place
             right = th * self.wheel_track  * self.gear_reduction / 2.0
@@ -174,18 +170,8 @@ class base_controller(Thread):
             # Rotation about a point in space
             left = x - th * self.wheel_track  * self.gear_reduction / 2.0
             right = x + th * self.wheel_track  * self.gear_reduction / 2.0
-            #d = x/th
-            #l = x + th * (d - self.wheel_track/2.0)
-            #r = x + th * (d + self.wheel_track/2.0)
 
-        # Log motion.                  
-        #rospy.loginfo("Twist move: " + str(left) + ", " + str(right))
-        
         # Set motor speeds in meters per second.
-        #rospy.loginfo("")
-        if left < 0 and right < 0:
-            rospy.loginfo("GOING BACKWARDS!!!")
-        #rospy.loginfo("Left/Right: " + str(left) + "/" + str(right))
         self.mySerializer.mogo_m_per_s([1, 2], [left, right])
         
     def stop(self):
