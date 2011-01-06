@@ -1,8 +1,8 @@
 <package>
   <description brief="serializer">
-
+  
      ROS Package for the Serializer microcontroller made by the Robotics Connection
-
+     
   </description>
   <author>Patrick Goebel</author>
   <license>BSD</license>
@@ -14,8 +14,6 @@
   <depend package="geometry_msgs"/>
   <depend package="nav_msgs"/>
   <depend package="tf"/>
-  <depend package="dynamic_reconfigure"/>
-
 </package>
 
 
