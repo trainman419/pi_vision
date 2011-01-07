@@ -27,37 +27,49 @@ from serializer.srv import *
 from base_controller import *
 from geometry_msgs.msg import Twist
 import threading, time
+import os
 
 class SerializerROS():
     def __init__(self):
         rospy.init_node('serializer')
+        rospy.on_shutdown(self.shutdown)
         self.port = rospy.get_param("~port", "/dev/ttyUSB0")
         self.baud = int(rospy.get_param("~baud", 19200))
-        self.rate = int(rospy.get_param("~sensor_rate", 10))
-        self.publish_sensors = rospy.get_param("~publish_sensors", False)
         self.timeout = rospy.get_param("~timeout", 0.5)
-        self.use_base_controller = rospy.get_param("~use_base_controller", True)
-
+        self.publish_sensors = rospy.get_param("~publish_sensors", False)
+        self.rate = int(rospy.get_param("~sensor_rate", 10))
         
         self.pid_params = dict()
+        self.pid_params['use_base_controller'] = rospy.get_param("~use_base_controller", False)
         self.pid_params['units'] = rospy.get_param("~units", 0)
-        self.pid_params['wheel_diameter'] = rospy.get_param("~wheel_diameter", 0.132) 
-        self.pid_params['wheel_track'] = rospy.get_param("~wheel_track", 0.3365)
+        self.pid_params['wheel_diameter'] = rospy.get_param("~wheel_diameter", "") 
+        self.pid_params['wheel_track'] = rospy.get_param("~wheel_track", "")
         self.pid_params['encoder_type'] = rospy.get_param("~encoder_type", 1) 
-        self.pid_params['encoder_resolution'] = rospy.get_param("~encoder_resolution", 624) 
-        self.pid_params['gear_reduction'] = rospy.get_param("~gear_reduction", 1.667)
+        self.pid_params['encoder_resolution'] = rospy.get_param("~encoder_resolution", "") 
+        self.pid_params['gear_reduction'] = rospy.get_param("~gear_reduction", 1.0)
         self.pid_params['motors_reversed'] = rospy.get_param("~motors_reversed", False)
         
         self.pid_params['init_pid'] = rospy.get_param("~init_pid", False)  
-        self.pid_params['VPID_P'] = rospy.get_param("~VPID_P", 2)
-        self.pid_params['VPID_I'] = rospy.get_param("~VPID_I", 0)
-        self.pid_params['VPID_D']  = rospy.get_param("~VPID_D", 5)
-        self.pid_params['VPID_L'] = rospy.get_param("~VPID_L", 45)
-        self.pid_params['DPID_P'] = rospy.get_param("~DPID_P", 1)
-        self.pid_params['DPID_I'] = rospy.get_param("~DPID_I", 0)
-        self.pid_params['DPID_D'] = rospy.get_param("~DPID_D", 0)
-        self.pid_params['DPID_A'] = rospy.get_param("~DPID_A", 5)
-        self.pid_params['DPID_B'] = rospy.get_param("~DPID_B", 5)
+        self.pid_params['VPID_P'] = rospy.get_param("~VPID_P", "")
+        self.pid_params['VPID_I'] = rospy.get_param("~VPID_I", "")
+        self.pid_params['VPID_D']  = rospy.get_param("~VPID_D", "")
+        self.pid_params['VPID_L'] = rospy.get_param("~VPID_L", "")
+        self.pid_params['DPID_P'] = rospy.get_param("~DPID_P", "")
+        self.pid_params['DPID_I'] = rospy.get_param("~DPID_I", "")
+        self.pid_params['DPID_D'] = rospy.get_param("~DPID_D", "")
+        self.pid_params['DPID_A'] = rospy.get_param("~DPID_A", "")
+        self.pid_params['DPID_B'] = rospy.get_param("~DPID_B", "")
+        
+        # Check PID parameters if we are using the base controller.
+        if self.pid_params['use_base_controller']:
+            pid_error = False
+            for param in self.pid_params:
+                if self.pid_params[param] == "":
+                    rospy.logerr("*** PID Parameter " + param + " is missing. ***")
+                    pid_error = True
+            if pid_error:
+                rospy.signal_shutdown("Missing PID parameters.")
+                os._exit(1)
                 
         rospy.loginfo("Connected to Serializer on port " + self.port + " at " + str(self.baud) + " baud")
         rospy.loginfo("Publishing Serializer data at " + str(self.rate) + " Hz")
@@ -85,20 +97,20 @@ class SerializerROS():
                 pass
             
             # The SensorState publisher
-            self.sensorStatePub = rospy.Publisher('sensors', SensorState)
+            self.sensorStatePub = rospy.Publisher('~sensors', SensorState)
         
         # The Serializer services.
-        rospy.Service('SetServo', SetServo ,self.SetServoHandler)
-        rospy.Service('Rotate', Rotate, self.RotateHandler)
-        rospy.Service('TravelDistance', TravelDistance, self.TravelDistanceHandler)
-        rospy.Service('GetAnalog', GetAnalog, self.GetAnalogHandler)
-        rospy.Service('Ping', Ping, self.PingHandler)
-        rospy.Service('Voltage', Voltage, self.VoltageHandler)
-        rospy.Service('GP2D12', GP2D12, self.GP2D12Handler)
-        rospy.Service('PhidgetsTemperature', PhidgetsTemperature, self.PhidgetsTemperatureHandler)
-        rospy.Service('PhidgetsVoltage', PhidgetsVoltage, self.PhidgetsVoltageHandler)
-        rospy.Service('PhidgetsCurrent', PhidgetsCurrent, self.PhidgetsCurrentHandler)
-        
+        rospy.Service('~SetServo', SetServo ,self.SetServoHandler)
+        rospy.Service('~GetAnalog', GetAnalog, self.GetAnalogHandler)
+        rospy.Service('~Voltage', Voltage, self.VoltageHandler)
+        rospy.Service('~Ping', Ping, self.PingHandler)
+        rospy.Service('~GP2D12', GP2D12, self.GP2D12Handler)
+        rospy.Service('~PhidgetsTemperature', PhidgetsTemperature, self.PhidgetsTemperatureHandler)
+        rospy.Service('~PhidgetsVoltage', PhidgetsVoltage, self.PhidgetsVoltageHandler)
+        rospy.Service('~PhidgetsCurrent', PhidgetsCurrent, self.PhidgetsCurrentHandler)
+        rospy.Service('~Rotate', Rotate, self.RotateHandler)
+        rospy.Service('~TravelDistance', TravelDistance, self.TravelDistanceHandler)
+   
         rosRate = rospy.Rate(self.rate)
         
         # Initialize the Serializer driver
@@ -108,7 +120,7 @@ class SerializerROS():
         time.sleep(1)
         
         # Create and start the base controller.
-        if self.use_base_controller:
+        if self.pid_params['use_base_controller']:
             rospy.loginfo("Starting Serialzier base controller...")
             self.base_controller = base_controller(self.mySerializer, "Serializer PID")
             self.base_controller.start()
@@ -179,7 +191,7 @@ class SerializerROS():
         try:
             sonar = self.mySerializer.get_Ping(req.pin, req.cached)
         except:
-            rospy.logerror("BAD SONAR: " + str(sonar))
+            rospy.logerror("Bad sonar value on pine " + str(req.pin) + ". Value was: " + str(sonar))
         return PingResponse(sonar)
 
     def GP2D12Handler(self, req):
@@ -197,7 +209,9 @@ class SerializerROS():
     def PhidgetsCurrentHandler(self, req):
         return PhidgetsCurrentResponse(self.mySerializer.get_PhidgetsCurrent(req.pin, req.cached))
         
-           
+    def shutdown(self):
+        rospy.loginfo("Shutting down Serializer Node.")
+        
 if __name__ == '__main__':
     try:
         mySerializer = SerializerROS()

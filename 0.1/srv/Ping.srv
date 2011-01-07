@@ -1,4 +1,4 @@
 uint8 pin
 bool cached
 ---
-uint8 value
+float32 value

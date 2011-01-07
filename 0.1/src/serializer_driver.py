@@ -81,29 +81,28 @@ class Serializer():
         self.port = port
         self.baudrate = baudrate
         self.timeout = timeout
-        try:
+        self.use_base_controller = pid_params['use_base_controller']
+        
+        if self.use_base_controller:
             self.wheel_diameter = pid_params['wheel_diameter']
             self.wheel_track = pid_params['wheel_track']
             self.encoder_resolution = pid_params['encoder_resolution']
             self.encoder_type = pid_params['encoder_type']
             self.gear_reduction = pid_params['gear_reduction']
             self.motors_reversed = pid_params['motors_reversed']
-            self.init_pid = pid_params['init_pid']
-    
-            self.units = pid_params['units']
-            self.VPID_P = pid_params['VPID_P']
-            self.VPID_I = pid_params['VPID_I']
-            self.VPID_D  = pid_params['VPID_D']
-            self.VPID_L = pid_params['VPID_L']
-            self.DPID_P = pid_params['DPID_P']
-            self.DPID_I = pid_params['DPID_I']
-            self.DPID_D = pid_params['DPID_D']
-            self.DPID_A = pid_params['DPID_A']
-            self.DPID_B = pid_params['DPID_B']
-        except:
-            print "Some or all PID parameters are not set or missing."
-            os._exit(1)
-        
+
+        self.init_pid = pid_params['init_pid']
+        self.units = pid_params['units']
+        self.VPID_P = pid_params['VPID_P']
+        self.VPID_I = pid_params['VPID_I']
+        self.VPID_D  = pid_params['VPID_D']
+        self.VPID_L = pid_params['VPID_L']
+        self.DPID_P = pid_params['DPID_P']
+        self.DPID_I = pid_params['DPID_I']
+        self.DPID_D = pid_params['DPID_D']
+        self.DPID_A = pid_params['DPID_A']
+        self.DPID_B = pid_params['DPID_B']
+
         self.loop_interval = None
         self.ticks_per_meter = None
         self.messageLock = threading.Lock()
@@ -136,13 +135,15 @@ class Serializer():
                 self.units = self.get_units()
                 [self.VPID_P, self.VPID_I, self.VPID_D, self.VPID_L] = self.get_vpid()
                 [self.DPID_P, self.DPID_I, self.DPID_D, self.DPID_A, self.DPID_B] = self.get_dpid()
-                
-            if self.units == 0:
-                self.ticks_per_meter = int(self.encoder_resolution * self.gear_reduction  / (self.wheel_diameter * math.pi))
-            elif self.units == 1:
-                self.ticks_per_meter = int(self.encoder_resolution * self.gear_reduction / (self.wheel_diameter * math.pi * 2.54 / 100.0))
+            
+            if self.use_base_controller:
+                if self.units == 0:
+                    self.ticks_per_meter = int(self.encoder_resolution * self.gear_reduction  / (self.wheel_diameter * math.pi))
+                elif self.units == 1:
+                    self.ticks_per_meter = int(self.encoder_resolution * self.gear_reduction / (self.wheel_diameter * math.pi * 2.54 / 100.0))
                     
-            self.loop_interval = self.VPID_L * self.MILLISECONDS_PER_PID_LOOP / 1000
+                self.loop_interval = self.VPID_L * self.MILLISECONDS_PER_PID_LOOP / 1000
+
 
         except SerialException:
             print "Cannot connect to Serializer!"
@@ -834,19 +835,21 @@ class Serializer():
     def voltage(self, cached=False):
         if cached:
             try:
-                value = self.analog_sensor_cache[5] * 15. / 1024.
+                value = self.analog_sensor_cache[5]
             except:
                 try:
-                    value = self.sensor(5) * 15. / 1024.
+                    value = self.sensor(5)
                     self.update_analog_cache(5, value)
                 except:
                     return None
         else:
             try:
-                value = self.sensor(5) * 15. / 1024.
+                value = self.sensor(5)
+                self.update_analog_cache(5, value)
             except:
                 return None
-        return value
+        
+        return value * 15. / 1024.
         
     def set_wheel_diameter(self, diameter):
         self.wheel_diameter = diameter
