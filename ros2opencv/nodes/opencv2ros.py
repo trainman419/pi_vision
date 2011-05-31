@@ -17,7 +17,7 @@ class OpenCV2ROS:
     def __init__(self, path):
         rospy.init_node('opencv2ros', anonymous=True)
         
-        image_pub = rospy.Publisher("/camera/rgb/image_color", Image)
+        image_pub = rospy.Publisher("/camera/image_raw", Image)
         
         rospy.on_shutdown(self.cleanup)
     
