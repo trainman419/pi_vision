@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-""" face_tracker.py - Version 1.0 2011-04-28
+""" face_tracker.py - Version 0.1 2011-04-28
 
     Track a face using the OpenCV Haar detector to initially locate the face, then OpenCV's
     Good-Features-to-Track and Lucas-Kanade Optical Flow to track the face features over 
@@ -15,7 +15,7 @@
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation; either version 2 of the License, or
-    (at your option) any later version.
+    (at your option) any later version.5
     
     This program is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -42,48 +42,49 @@ class PatchTracker(ROS2OpenCV):
         
         self.node_name = node_name
         
-        """ Do automatic face tracking? """
+        # Do automatic face tracking?
         self.auto_face_tracking = rospy.get_param("~auto_face_tracking", True)
 
-        """ For face tracking, use only the OpenCV Haar face detector? """
+        # For face tracking, use only the OpenCV Haar face detector?
         self.use_haar_only = rospy.get_param("~use_haar_only", False)
         
-        """ Should we use depth information for detection? """
+        # Should we use depth information for detection?
         self.use_depth_for_detection = rospy.get_param("~use_depth_for_detection", False)
         
+        # Width and height in radians of the camera's field of view (FOV)
         self.fov_width = rospy.get_param("~fov_width", 1.094) # The Kinect's FOV is 62.7 degrees for the RGB image.
         self.fov_height = rospy.get_param("~fov_height", 1.094)
         
-        """ What is the maximum size (in meters) we will accept for a face detection? """
+        # What is the maximum size (in meters) we will accept for a face detection?
         self.max_face_size = rospy.get_param("~max_face_size", 0.28)
 
-        """ Should we use depth information for tracking? """
+        # Should we use depth information for tracking?
         self.use_depth_for_tracking = rospy.get_param("~use_depth_for_tracking", False)
         
-        """ What is the minimum number of feature we will accept before expanding the track window?
-            Use 50 for a 640x480 image, or 25 for a 320x240 image """
+        # What is the minimum number of feature we will accept before expanding the track window?
+        # Use 50 for a 640x480 image, or 25 for a 320x240 image 
         self.min_features = rospy.get_param("~min_features", 50)
         
-        """ Alternatively, automatically track the number of features found in the intial detection window """
+        # Alternatively, automatically track the number of features found in the intial detection window 
         self.auto_min_features = rospy.get_param("~auto_min_features", True)
         
-        """ What is the smallest number of features we will accept before returning to the detector
-            to get a fresh patch? """
+        # What is the smallest number of features we will accept before returning to
+        # the detector to get a fresh patch?
         self.abs_min_features = rospy.get_param("~abs_min_features", 6)
         
-        """ At what standard error do we drop feature points from the tracked cluster? """
+        # At what standard error do we drop feature points from the tracked cluster? 
         self.std_err_xy = rospy.get_param("~std_err_xy", 2.5) 
 
-        """ At what total MSE over the cluster do we go back to the detector? """
+        # At what total MSE over the cluster do we go back to the detector?
         self.max_mse = rospy.get_param("~max_mse", 10000)
         
-        """ Minimum pixel distance for Good Features to Track """
-        self.good_feature_distance = rospy.get_param("~initial_feature_distance", 5)
+        # Minimum pixel distance for Good Features to Track
+        self.good_feature_distance = rospy.get_param("~good_feature_distance", 5)
         
-        """ Minimum pixel distance for adding features during expansion """
+        # Minimum pixel distance for adding features during expansion
         self.add_feature_distance = rospy.get_param("~add_feature_distance", 10)
         
-        """ How much should we expand the track box when the number of features falls below threshold? """
+        # How much should we expand the track box when the number of features falls below threshold?
         self.expand_scale = 1.1 
             
         self.detect_box = None

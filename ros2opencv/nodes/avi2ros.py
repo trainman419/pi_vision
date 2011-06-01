@@ -1,6 +1,28 @@
 #!/usr/bin/env python
+
+""" avi2ros.py - Version 0.1 2011-04-28
+
+    Read in an AVI video file and republish on the /camera/image_raw topic.
+    
+    Created for the Pi Robot Project: http://www.pirobot.org
+    Copyright (c) 2011 Patrick Goebel.  All rights reserved.
+
+    This program is free software; you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation; either version 2 of the License, or
+    (at your option) any later version.
+    
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details at:
+    
+    http://www.gnu.org/licenses/gpl.html
+      
+"""
+
 import roslib
-roslib.load_manifest('ros2opencv')
+roslib.load_manifest('avi2opencv')
 import sys
 import rospy
 import cv
@@ -15,7 +37,7 @@ class OpenCV2ROS:
             cv.DestroyAllWindows()  
 
     def __init__(self, path):
-        rospy.init_node('opencv2ros', anonymous=True)
+        rospy.init_node('avi2ros', anonymous=True)
         
         image_pub = rospy.Publisher("/camera/image_raw", Image)
         
