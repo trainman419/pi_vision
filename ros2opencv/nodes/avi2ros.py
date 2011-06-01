@@ -22,7 +22,7 @@
 """
 
 import roslib
-roslib.load_manifest('avi2opencv')
+roslib.load_manifest('avi2ros')
 import sys
 import rospy
 import cv
@@ -103,9 +103,9 @@ def main(args):
     print help_message
     
     try:
-        o2r = OpenCV2ROS(sys.argv[1])
+        a2r = avi2ROS(sys.argv[1])
     except KeyboardInterrupt:
-        print "Shutting down opencv2ros..."
+        print "Shutting down avi2ros..."
         cv.DestroyAllWindows()
 
 if __name__ == '__main__':
