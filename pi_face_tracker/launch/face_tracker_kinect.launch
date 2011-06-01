@@ -12,10 +12,16 @@
       auto_min_features: True
       min_features: 50
       abs_min_features: 6
+      good_feature_distance: 8
+      add_feature_distance: 10
       std_err_xy: 2.5
+      std_err_z: 1.0
       max_mse: 100000
       show_text: True
       show_features: True
+      fov_width: 1.094
+      fov_height: 1.094
+      max_face_size: 0.28
     </rosparam>
     
   	<param name="cascade_frontal_alt" value="$(find pi_face_tracker)/params/haarcascade_frontalface_alt.xml" />

@@ -32,6 +32,7 @@ from ros2opencv import ROS2OpenCV
 import rospy
 import cv
 import sys
+import os
 from sensor_msgs.msg import RegionOfInterest, Image
 from math import sqrt, isnan
 
@@ -74,7 +75,13 @@ class PatchTracker(ROS2OpenCV):
         self.std_err_xy = rospy.get_param("~std_err_xy", 2.5) 
 
         """ At what total MSE over the cluster do we go back to the detector? """
-        self.max_mse = rospy.get_param("~max_mse", 10000) 
+        self.max_mse = rospy.get_param("~max_mse", 10000)
+        
+        """ Minimum pixel distance for Good Features to Track """
+        self.good_feature_distance = rospy.get_param("~initial_feature_distance", 5)
+        
+        """ Minimum pixel distance for adding features during expansion """
+        self.add_feature_distance = rospy.get_param("~add_feature_distance", 10)
         
         """ How much should we expand the track box when the number of features falls below threshold? """
         self.expand_scale = 1.1 
@@ -107,7 +114,6 @@ class PatchTracker(ROS2OpenCV):
         """ Set the Good Features to Track and Lucas-Kanade parameters """
         self.night_mode = False       
         self.quality = 0.01
-        self.min_distance = 5
         self.win_size = 10
         self.max_count = 200
         self.flags = 0
@@ -126,16 +132,28 @@ class PatchTracker(ROS2OpenCV):
         """ Otherwise, track the face using Good Features to Track and Lucas-Kanade Optical Flow """
         if not self.use_haar_only:
             if self.detect_box:
-                if not self.track_box:
+                if not self.track_box or not self.is_rect_nonzero(self.track_box):
                     self.features = []
                     self.track_box = self.detect_box
                 self.track_box = self.track_lk(cv_image)
                 
+                """ Prune features that are too far from the main cluster """
+                if len(self.features) > 0:
+                    ((cog_x, cog_y, cog_z), mse_xy, mse_z, score) = self.prune_features(min_features = self.abs_min_features, outlier_threshold = self.std_err_xy, mse_threshold=self.max_mse)
+                    
+                    if score == -1:
+                        self.detect_box = None
+                        self.track_box = None
+                        return cv_image
+                
+                """ Add features if the number is getting too low """
                 if len(self.features) < self.min_features:
                     self.expand_scale = 1.1 * self.expand_scale
-                    self.add_features(cv_image, min_distance=10)
+                    self.add_features(cv_image)
                 else:
                     self.expand_scale = 1.1
+
+        
             else:
                 self.features = []
                 self.track_box = None
@@ -180,7 +198,7 @@ class PatchTracker(ROS2OpenCV):
                 text_font = cv.InitFont(cv.CV_FONT_VECTOR0, 3, 2, 0, 3)
                 cv.PutText(self.marker_image, "LOST FACE!", (50, int(self.image_size[1] * 0.9)), text_font, cv.RGB(255, 255, 0))
             return None
-        
+                
         for ((x, y, w, h), n) in faces:
             """ The input to cv.HaarDetectObjects was resized, so scale the 
                 bounding box of each face and convert it to two CvPoints """
@@ -195,8 +213,11 @@ class PatchTracker(ROS2OpenCV):
                 i = 0
                 for x in range(pt1[0], pt2[0]):
                     for y in range(pt1[1], pt2[1]):
-                        face_distance = cv.Get2D(self.depth_image, y, x)
-                        z = face_distance[0]
+                        try:
+                            face_distance = cv.Get2D(self.depth_image, y, x)
+                            z = face_distance[0]
+                        except:
+                            continue
                         if isnan(z):
                             continue
                         else:
@@ -222,7 +243,7 @@ class PatchTracker(ROS2OpenCV):
 
             """ Break out of the loop after the first face """
             return face_box
-        
+
     def track_lk(self, cv_image):
         """ Initialize intermediate images if necessary """
         if not self.pyramid:
@@ -289,7 +310,7 @@ class PatchTracker(ROS2OpenCV):
 
             """ Find points to track using Good Features to Track """
             self.features = cv.GoodFeaturesToTrack(self.grey, eig, temp, self.max_count,
-                self.quality, self.min_distance, mask=roi, blockSize=3, useHarris=0, k=0.04)
+                self.quality, self.good_feature_distance, mask=roi, blockSize=3, useHarris=0, k=0.04)
             
             if self.auto_min_features:
                 """ Since the detect box is larger than the actual face or desired patch, shrink the number a features by 10% """
@@ -302,14 +323,6 @@ class PatchTracker(ROS2OpenCV):
         
         """ If we have some features... """
         if len(self.features) > 0:
-            """ Check the spread of the feature cluster """
-            ((cog_x, cog_y, cog_z), mse_xy, mse_z, score) = self.prune_features(min_features = self.abs_min_features, outlier_threshold = self.std_err_xy, mse_threshold=self.max_mse)
-            
-            if score == -1:
-                self.detect_box = None
-                self.track_box = None
-                return None
-        
             """ The FitEllipse2 function below requires us to convert the feature array
                 into a CvMat matrix """
             try:
@@ -355,7 +368,7 @@ class PatchTracker(ROS2OpenCV):
         else:
             return None
         
-    def add_features(self, cv_image, min_distance):
+    def add_features(self, cv_image,):
         """ Look for any new features around the current track box (ellipse) """
         
         """ Create the ROI mask"""
@@ -388,12 +401,12 @@ class PatchTracker(ROS2OpenCV):
         
         """ Get the new features using Good Features to Track """
         features = cv.GoodFeaturesToTrack(self.grey, eig, temp, self.max_count,
-        self.quality, self.min_distance, mask=roi, blockSize=3, useHarris=0, k=0.04)
+        self.quality, self.good_feature_distance, mask=roi, blockSize=3, useHarris=0, k=0.04)
                 
         """ Append new features to the current list """
         i = 0
         for new_feature in features:
-            if self.distance_to_cluster(new_feature, self.features) > min_distance:
+            if self.distance_to_cluster(new_feature, self.features) > self.add_feature_distance:
                 self.features.append(new_feature)
                 i = i + 1
                 
