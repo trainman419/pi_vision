@@ -135,7 +135,6 @@ class ROS2OpenCV:
         
         """ Some webcams invert the image """
         if self.flip_image:
-            rospy.loginfo("Flipping!")
             cv.Flip(cv_image)
                     
         """ Create a few images we will use for display """
