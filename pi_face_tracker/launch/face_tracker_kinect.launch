@@ -4,7 +4,6 @@
     <remap from="input_depth_image" to="/camera/depth/image" />
     
     <rosparam>
-      flip_image: False
       auto_face_tracking: True
       use_haar_only: False
       use_depth_for_detection: True

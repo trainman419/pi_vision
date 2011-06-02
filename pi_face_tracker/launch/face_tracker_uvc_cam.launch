@@ -3,9 +3,8 @@
     <remap from="input_rgb_image" to="/camera/image_raw" />
     
     <rosparam>
-      flip_image: False
       auto_face_tracking: True
-      use_haar_only: False
+      use_haar_only: True
       use_depth_for_detection: False
       auto_min_features: True
       min_features: 50
