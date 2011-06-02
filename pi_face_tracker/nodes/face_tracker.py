@@ -56,6 +56,7 @@ class PatchTracker(ROS2OpenCV):
         self.max_mse = rospy.get_param("~max_mse", 10000)
         self.good_feature_distance = rospy.get_param("~good_feature_distance", 5)
         self.add_feature_distance = rospy.get_param("~add_feature_distance", 10)
+        self.flip_image = rospy.get_param("~flip_image", False)
         self.expand_scale = 1.1 
             
         self.detect_box = None

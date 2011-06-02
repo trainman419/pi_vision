@@ -47,7 +47,6 @@ class ROS2OpenCV:
         self.node_name = node_name
         self.input_rgb_image = "input_rgb_image"
         self.input_depth_image = "input_depth_image"
-        self.flip_image = rospy.get_param("~flip_image", False)
         self.show_text = rospy.get_param("~show_text", True)
         self.show_features = rospy.get_param("~show_features", True)
 

@@ -18,6 +18,7 @@
       fov_width: 1.094
       fov_height: 1.094
       max_face_size: 0.28
+      flip_image: False
     </rosparam>
     
   	<param name="cascade_frontal_alt" value="$(find pi_face_tracker)/params/haarcascade_frontalface_alt.xml" />
