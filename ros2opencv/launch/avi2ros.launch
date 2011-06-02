@@ -1,0 +1,8 @@
+<launch>
+    <arg name="input" />
+    <arg name="output" default="/camera/image_raw" />
+    <node pkg="ros2opencv" name="avi2ros" type="avi2ros.py" output="screen">
+	  <param name="output" value="$(arg output)" />
+	  <param name="input" value="$(arg input)" />
+    </node>
+</launch>

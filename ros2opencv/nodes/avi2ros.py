@@ -22,7 +22,7 @@
 """
 
 import roslib
-roslib.load_manifest('avi2ros')
+roslib.load_manifest('ros2opencv')
 import sys
 import rospy
 import cv
@@ -30,28 +30,24 @@ from std_msgs.msg import String
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge, CvBridgeError
 
-class OpenCV2ROS:
-    
-    def cleanup(self):
-            print "Shutting down vision node."
-            cv.DestroyAllWindows()  
-
-    def __init__(self, path):
+class AVI2ROS:
+    def __init__(self):
         rospy.init_node('avi2ros', anonymous=True)
         
-        image_pub = rospy.Publisher("/camera/image_raw", Image)
+        self.input = rospy.get_param("~input", "")
+        self.output = rospy.get_param("~output", "/camera/image_raw")
+        
+        image_pub = rospy.Publisher(self.output, Image)
         
         rospy.on_shutdown(self.cleanup)
-    
-        #video = cv.CaptureFromCAM(0)
-        video = cv.CaptureFromFile(path)
+        
+        video = cv.CaptureFromFile(self.input)
         fps = int(cv.GetCaptureProperty(video, cv.CV_CAP_PROP_FPS))
         
         """ Bring the fps up to 25 Hz """
         fps = int(fps * 25.0 / fps)
     
-        cv.NamedWindow("Image window", cv.CV_NORMAL)
-        cv.ResizeWindow("Image window", 320, 240)
+        cv.NamedWindow("Image window", True) # autosize the display
 
         bridge = CvBridge()
                 
@@ -62,7 +58,7 @@ class OpenCV2ROS:
         while not rospy.is_shutdown():
             
             if self.restart:
-                video = cv.CaptureFromFile(path)
+                video = cv.CaptureFromFile(self.input)
                 self.restart = None
             
             """ handle events """
@@ -91,8 +87,11 @@ class OpenCV2ROS:
             try:
                 image_pub.publish(bridge.cv_to_imgmsg(frame, "bgr8"))
             except CvBridgeError, e:
-                print e
-  
+                print e         
+    
+    def cleanup(self):
+            print "Shutting down vision node."
+            cv.DestroyAllWindows()
 
 def main(args):
     help_message =  "Hot keys: \n" \
@@ -103,7 +102,7 @@ def main(args):
     print help_message
     
     try:
-        a2r = avi2ROS(sys.argv[1])
+        a2r = AVI2ROS()
     except KeyboardInterrupt:
         print "Shutting down avi2ros..."
         cv.DestroyAllWindows()
