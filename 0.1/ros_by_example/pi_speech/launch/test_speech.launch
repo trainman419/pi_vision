@@ -1,8 +1,0 @@
-<launch>
-
-  <node name="recognizer" pkg="pocketsphinx" type="recognizer.py">
-    <param name="lm" value="$(find pi_speech)/params/test_speech.lm"/>
-    <param name="dict" value="$(find pi_speech)/params/test_speech.dic"/>
-  </node>
-
-</launch>

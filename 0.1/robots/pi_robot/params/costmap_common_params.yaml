@@ -1,7 +1,0 @@
-obstacle_range: 3.0
-raytrace_range: 4.0
-footprint: [[-0.19, 0.17], [0.19, 0.17], [0.19, -0.17], [-0.19, -0.17]]
-inflation_radius: 0.5
-transform_tolerance: 1.0
-observation_sources: base_scan
-base_scan: {sensor_frame: /base_laser, data_type: LaserScan, topic: /base_scan, marking: true, clearing: true}

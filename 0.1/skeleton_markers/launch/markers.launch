@@ -1,7 +1,0 @@
-<launch>
-  <include file="$(find pi_tracker)/launch/skeleton.launch" />
-
-  <node pkg="skeleton_markers" name="skeleton_markers" type="skeleton_markers.py" output="screen">
-    <rosparam file="$(find skeleton_markers)/params/marker_params.yaml" command="load" />
-  </node>
-</launch>

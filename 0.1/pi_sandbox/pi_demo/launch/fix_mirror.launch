@@ -1,3 +1,0 @@
-<launch>
-   <node pkg="tf" type="static_transform_publisher" name="world_base_broadcaster" args="0 0 0 0 0 3.1415 /world /openni_camera 100" />
-</launch>

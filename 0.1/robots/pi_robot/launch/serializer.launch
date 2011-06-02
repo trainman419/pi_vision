@@ -1,5 +1,0 @@
-<launch>
-	<node name="serializer" pkg="serializer" type="serializer_node.py" output="screen">
-		<rosparam file="$(find pi_robot)/params/serializer_params.yaml" command="load" />
-	</node>
-</launch>

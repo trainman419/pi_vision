@@ -1,9 +1,0 @@
-<launch>
-	<!-- For the USB2Dynamixel use controller value "robotis".  For the ArbotiX, use "arbotix". -->
-	<arg name="controller" value="robotis" />
-	<include file="$(find pi_head_tracking_tutorial)/launch/camera.launch" />
-    <node name="vision_node" pkg="pi_head_tracking_tutorial" type="vision_node.py" output="screen" />
-    <node name="head_track_node" pkg="pi_head_tracking_tutorial" type="head_track_node.py" output="screen" />
-    <include file="$(find pi_head_tracking_tutorial)/launch/urdf.launch" />
-    <include file="$(find pi_head_tracking_tutorial)/launch/$(arg controller).launch" />
-</launch>

@@ -1,7 +1,0 @@
-<launch>
-  <include file="$(find pi_slam_tutorial)/launch/nav_common.launch" />
-
-  <node pkg="pi_slam_tutorial" type="fake_odometry.py" name="fake_odometry" />
-  <node pkg="tf" type="static_transform_publisher" name="odom_map_trans" args="0 0 0 0 0 0 /odom /map 100" />
-  <node pkg="tf" type="static_transform_publisher" name="world_map_trans" args="0 0 0 0 0 0 /map /world 100" /> 
-</launch>

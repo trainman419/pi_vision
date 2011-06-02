@@ -1,4 +1,0 @@
-<launch>
-	<machine name="pi_robot" address="192.168.1.8" ros-root="$(env ROS_ROOT)" ros-package-path="$(env ROS_PACKAGE_PATH)" default="true" />
-	<machine name="desktop" address="192.168.1.3" ros-root="$(env ROS_ROOT)" ros-package-path="$(env ROS_PACKAGE_PATH)" />
-</launch>

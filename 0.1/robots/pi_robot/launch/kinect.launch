@@ -1,7 +1,0 @@
-<launch>
-    <include file="$(find openni_camera)/launch/openni_node.launch" />
-    <node name="dynamic_reconfigure" pkg="dynamic_reconfigure" type="reconfigure_gui" />
-    <!--
-    <node name="dynamic_reconfigure_load" pkg="dynamic_reconfigure" type="dynparam" args="load /openni_camera $(find pi_demo)/kinect.yaml" />
-    -->
-</launch>

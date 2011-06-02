@@ -1,8 +1,0 @@
-<launch>
-  
-	<node name="arbotix" pkg="arbotix" type="arbotix-node.py" output="screen">
-		<rosparam file="$(find pi_robot)/params/arbotix.yaml" command="load" />
-	</node>
-
-    <node name="move_arm" pkg="pi_robot" type="move_arm.py" output="screen" />
-</launch>

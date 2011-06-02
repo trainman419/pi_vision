@@ -1,5 +1,0 @@
-<launch>
-  <node pkg="irobot_create_2_1" name="create_controller" type="driver.py" output="screen">
-    <param name="port" value="/dev/create" />
-  </node>
-</launch>

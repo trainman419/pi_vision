@@ -1,7 +1,0 @@
-<launch>
-
-    <node name="camshift" pkg="pi_robot" type="camshift.py" output="screen">
-    	<param name="rate" value="15" />
-    </node>
-
-</launch>
