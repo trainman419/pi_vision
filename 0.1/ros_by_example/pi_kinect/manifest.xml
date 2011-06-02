@@ -1,0 +1,18 @@
+<package>
+  <description brief="pi_kinect">
+
+     pi_kinect
+
+  </description>
+  <author>patrick</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/pi_kinect</url>
+  <depend package="roscpp"/>
+  <depend package="rospy"/>
+  <depend package="openni_camera"/>
+  <depend package="openni_tracker"/>
+  <depend package="kdl"/>
+</package>
+
+

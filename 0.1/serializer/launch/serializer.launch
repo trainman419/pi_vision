@@ -1,0 +1,6 @@
+<launch>
+   <node name="serializer" pkg="serializer" type="serializer_node.py" output="screen">
+      <!-- Edit the following line to point to your params file -->
+      <rosparam file="$(find my_robot)/serializer_params.yaml" command="load" />
+   </node>
+</launch>

@@ -1,0 +1,13 @@
+<launch>
+  <node pkg="nodelet" type="nodelet" name="pcl_manager" args="manager" output="screen" />
+
+ <!-- Run a Statistical Outlier filter -->
+  <node pkg="nodelet" type="nodelet" name="stat_outlier" args="load pcl/StatisticalOutlierRemoval pcl_manager" output="screen">
+    <remap from="/stat_outlier/input" to="/camera/rgb/points" />
+    <param name="mean_k" value="10" />
+    <param name="stddev" value="1" />
+  </node>
+
+  
+</launch>
+

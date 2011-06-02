@@ -1,0 +1,8 @@
+<launch>
+  <node pkg="pi_opencv" name="face_tracker" type="face_tracker.py" output="screen">
+  	<param name="input_image" value="/camera/rgb/image_color" />
+  	<param name="cascade_frontal_alt" value="$(find pi_opencv)/params/haarcascade_frontalface_alt.xml" />
+   	<param name="cascade_frontal_alt2" value="$(find pi_opencv)/params/haarcascade_frontalface_alt2.xml" />
+  	<param name="cascade_profile" value="$(find pi_opencv)/params/haarcascade_profileface.xml" />
+  </node>
+</launch>

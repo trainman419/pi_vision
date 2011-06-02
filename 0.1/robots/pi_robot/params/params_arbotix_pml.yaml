@@ -1,0 +1,13 @@
+port: /dev/ttyUSB0
+baud: 57600
+rate: 10
+use_sync: False
+
+#controllers: {
+    #base_controller: {type: base_controller, base_width: 0.23495, ticks_meter: 19414},
+    #joint_controller: {type: joint_controller, joints: [head_pan_joint, head_tilt_joint, left_shoulder_up_joint, left_shoulder_forward_joint, left_elbow_joint, left_wrist_joint, right_shoulder_up_joint, right_shoulder_forward_joint, right_elbow_joint, right_wrist_joint, torso_joint] }
+#}
+
+sensors: {
+    pml: {type: pml, servo_id: 12, sensor_id: 0, sensor_type: A02YK, rate: 1.0, step_start: 280, step_value: 16, step_count: 30, out_of_range: 0.0}
+}

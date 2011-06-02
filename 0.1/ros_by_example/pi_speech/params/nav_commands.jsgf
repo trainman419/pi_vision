@@ -1,0 +1,17 @@
+#JSGF V1.0;
+
+grammar navigation;
+
+public <navCommand> = <command> <direction> | <stop> | [<command>] <faster> | [<command>] <slower> | <mute>;
+
+<command> = MOVE | GO | COME | TURN;
+
+<direction> = FORWARD | BACKWARD | LEFT | RIGHT;
+
+<stop> = STOP | HALT | ABORT;
+
+<faster> = FASTER | SPEED UP;
+
+<slower> = SLOWER | SLOW DOWN;
+
+<mute> = MUTE | STOP LISTENING;

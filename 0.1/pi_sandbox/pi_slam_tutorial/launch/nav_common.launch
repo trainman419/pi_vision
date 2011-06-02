@@ -1,0 +1,26 @@
+<launch>
+  <!-- How to find our package -->
+  <arg name="pkg" value="$(find pi_slam_tutorial)" />
+  
+  <!-- Make sure we are using real time -->
+  <param name="/use_sim_time" value="False" />
+  
+  <!-- Are we using combined positioning data? E.g. encoders + IMU? -->
+  <arg name="odom_combined" value="False" />
+ 
+  <!-- If we are not using combined data, set an identity between the odom and odom_combined frames -->
+  <group unless="$(arg odom_combined)">
+    <node pkg="tf" type="static_transform_publisher" name="odom_combined_broadcaster" args="0 0 0 0 0 0 /odom /odom_combined 100" />
+  </group>
+  
+  <!-- Load the URDF/Xacro model of our robot -->
+  <param name="robot_description" command="$(find xacro)/xacro.py '$(arg pkg)/urdf/kinectbot.urdf.xacro'" />
+
+  <!-- Fire up the joint state publisher in case we want to move the joints around -->
+  <param name="/use_gui" value="False" />
+  <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher" />
+  
+  <!-- Launch the robot state publisher -->
+  <node name="robot_state_publisher" pkg="robot_state_publisher" type="state_publisher" />
+    
+</launch>

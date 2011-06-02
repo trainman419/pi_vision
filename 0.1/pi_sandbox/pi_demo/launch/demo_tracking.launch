@@ -1,0 +1,6 @@
+<launch>
+  <include file="$(find pi_demo)/launch/ax12.launch" />
+  <include file="$(find demo_tracker)/launch/skeleton.launch" />
+  <include file="$(find pi_demo)/launch/point_head.launch" />
+  <node name="head_pointer_gui" pkg="pi_demo" type="head_pointer_gui.py" output="screen" />
+</launch>

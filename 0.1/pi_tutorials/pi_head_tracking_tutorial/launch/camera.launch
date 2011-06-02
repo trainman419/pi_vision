@@ -1,0 +1,13 @@
+<launch>
+    <node name="uvc_cam_node" pkg="uvc_cam" type="uvc_cam_node" output="screen">
+        <param name="device" value="/dev/video0" />
+        <param name="width" value="640" />
+        <param name="height" value="480" />
+        <param name="frame_rate" value="20" />  
+    </node>
+
+    <node name="dynamic_reconfigure" pkg="dynamic_reconfigure" type="reconfigure_gui" />
+    <!--
+    <node name="dynamic_reconfigure_load" pkg="dynamic_reconfigure" type="dynparam" args="load /uvc_cam_node $(find pi_head_tracking_tutorial)/params/philips_spc1300.yaml" />
+    -->
+</launch>

@@ -1,0 +1,5 @@
+<launch>
+	<node name="arbotix" pkg="arbotix" type="arbotix-node.py" output="screen">
+		<rosparam file="$(find pi_head_tracking_tutorial)/params/arbotix_params.yaml" command="load" />
+	</node>
+</launch>

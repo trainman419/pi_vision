@@ -1,0 +1,46 @@
+<launch>
+
+    <!-- Make sure simulated time is off -->
+    <param name="/use_sim_time" value="False" />
+    
+	<!-- Read in the URDF model of our robot. -->
+	<param name="robot_description" command="$(find xacro)/xacro.py '$(find pi_robot)/urdf/pi_robot.urdf.xacro'" />
+	
+ 	<!-- Use the joint state publisher and robot state publisher so we can see the robot in RViz. -->	
+	<param name="/use_gui" value="False" />
+    <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher" /> 
+    <node name="robot_state_publisher" pkg="robot_state_publisher" type="state_publisher" />
+    
+  	<!-- Run the map server with a blank map -->
+  	<node name="map_server" pkg="map_server" type="map_server" args="$(find pi_robot)/maps/blank_map.yaml"/>
+
+ 	<!-- Run fake localization -->
+  	<node pkg="fake_localization" type="fake_localization" name="fake_localization" output="screen" />
+    
+    <!-- For fake localization we need static transforms between /odom and /map and /map and /world -->
+    <node pkg="tf" type="static_transform_publisher" name="odom_map_broadcaster" args="0 0 0 0 0 0 /odom /map 100" />
+    <node pkg="tf" type="static_transform_publisher" name="world_map_broadcaster" args="0 0 0 0 0 0 /map /world 100" />
+    
+   	<!-- Fire up the Serializer -->
+    <node name="serializer" pkg="serializer" type="serializer_node.py">
+       <rosparam file="$(find pi_robot)/params/serializer_params.yaml" command="load" />
+    </node>
+    
+    <!-- Fire up the OpenNI Kinect interface and the Point Cloud to Laser Scan node -->
+  	<include file="$(find openni_camera)/launch/openni_kinect.launch"/>
+
+  	<node pkg="nodelet" type="nodelet" name="kinect_laser" args="standalone pointcloud_to_laserscan/CloudToScan">
+    	<param name="output_frame_id" value="/openni_depth_frame"/>
+    	<remap from="cloud" to="/camera/depth/points2"/>
+  	</node>
+    
+    <!-- Launch move_base and load all the costmap parameters for use with the base_local_planner -->
+    <node pkg="move_base" type="move_base" respawn="false" name="move_base" output="screen">
+	    <rosparam file="$(find pi_robot)/params/costmap_common_params.yaml" command="load" ns="global_costmap" />
+	    <rosparam file="$(find pi_robot)/params/costmap_common_params.yaml" command="load" ns="local_costmap" />
+	    <rosparam file="$(find pi_robot)/params/local_costmap_params.yaml" command="load" />
+	    <rosparam file="$(find pi_robot)/params/global_costmap_params.yaml" command="load" />
+	    <rosparam file="$(find pi_robot)/params/base_local_planner_params.yaml" command="load" />
+	</node>
+
+</launch>

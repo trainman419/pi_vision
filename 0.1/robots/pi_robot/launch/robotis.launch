@@ -1,0 +1,4 @@
+<launch>
+    <node name="robotis_joint_controller" pkg="pi_robot" type="robotis_joint_controller.py" output="screen" />
+</launch>
+    

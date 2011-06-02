@@ -1,0 +1,17 @@
+<launch>
+  
+	<param name="robot_description" command="$(find xacro)/xacro.py '$(find pi_robot)/urdf/pi_robot.urdf.xacro'" />
+    <param name="/use_sim_time" value="False" />
+ 
+    <node name="robot_state_publisher" pkg="robot_state_publisher" type="state_publisher">
+    	<param name="publish_frequency" value="20.0"/>
+    </node>>
+
+    <node name="right_arm_kinematics" pkg="arm_kinematics" type="arm_kinematics" output="screen">
+		<param name="root_name" value="right_shoulder_link" />
+		<param name="tip_name" value="right_finger_link" />
+	</node>
+		
+	<node pkg="tf" type="static_transform_publisher" name="odom_base_broadcaster" args="0 0 0.0325 0 0 0 /base_link /world 100" />
+	
+</launch>

@@ -1,0 +1,19 @@
+<package>
+  <description brief="pi_kinectbot">
+     Testing the Kinectbot
+  </description>
+  <author>Patrick Goebel</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>none</url>
+  <depend package="roscpp"/>
+  <depend package="rospy"/>
+  <depend package="std_msgs"/>
+  <depend package="geometry_msgs"/>
+  <depend package="tf"/>
+  <depend package="rviz"/>
+  <depend package="turtlebot_urdf"/>
+  <depend package="robot_state_publisher"/>
+  <depend package="joint_state_publisher"/>
+  <depend package="ax12_controller_core"/>
+</package>

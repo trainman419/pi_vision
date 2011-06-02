@@ -1,0 +1,23 @@
+<launch>
+
+	<arg name="left_right" value="left" />
+  
+	<param name="robot_description" command="$(find xacro)/xacro.py '$(find pi_demo)/urdf/pi_robot.urdf.xacro'" />
+    <param name="/use_sim_time" value="False" />
+    
+	<!-- Provide simulated control of the robot joint angles -->
+    <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher" />
+    <param name="/use_gui" value="True" />
+ 
+    <node name="robot_state_publisher" pkg="robot_state_publisher" type="state_publisher">
+    	<param name="publish_frequency" value="20.0"/>
+    </node>>
+
+    <node name="$(arg left_right)_arm_kinematics" pkg="arm_kinematics" type="arm_kinematics" output="screen">
+		<param name="root_name" value="left_shoulder_link" />
+		<param name="tip_name" value="left_hand_link" />
+	</node>
+	
+	<node pkg="tf" type="static_transform_publisher" name="odom_base_broadcaster" args="0 0 0.0325 0 0 0 /world /base_link 100" />
+	
+</launch>

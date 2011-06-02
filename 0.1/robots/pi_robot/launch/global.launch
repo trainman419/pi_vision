@@ -1,0 +1,37 @@
+<launch>
+	<group name="pi_robot">
+		<include file="$(pi_robot)/$(env ROBOT).machine" />
+	    
+	    <param name="robot_description" command="cat $(find pi_robot)/urdf/pi_robot_urdf.xml" />
+	    <param name="/use_gui" value="false" />
+	
+	    <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher" />
+	    <node name="robot_state_publisher" pkg="robot_state_publisher" type="state_publisher" />
+	        
+	    <!-- Comment if using the base controller. -->
+	    <!--
+	    <node pkg="tf" type="static_transform_publisher" name="odom_base_link_broadcaster" args="0 0 0 0 0 0 /odom /base_link 100" />
+		-->
+	
+	    <!--
+	    <node name="arbotix" pkg="arbotix" type="arbotix-node.py">
+	       <rosparam file="$(find pi_robot)/params/params_arbotix.yaml" command="load" />
+	    </node>
+	    -->
+	    
+	    <node name="hokuyo" pkg="hokuyo_node" type="hokuyo_node">
+	    	<remap from="scan" to="base_scan" />
+	    	<param name="hokuyo_node/calibrate_time" value="true" />
+	    	<param name="frame_id" value="base_laser" />
+	    </node>
+	  
+   		<!-- Fire up the Serializer -->
+    	<node name="serializer" pkg="serializer" type="serializer_node.py">
+       		<rosparam file="$(find pi_robot)/params/serializer_params.yaml" command="load" />
+    	</node>
+	    
+    	<!-- The navigation stack and associated parameters -->
+    	<include file="$(find pi_robot)/launch/move_base.xml" />
+
+     </group>
+</launch>

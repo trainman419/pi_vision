@@ -1,0 +1,23 @@
+<package>
+  <description brief="pi_pcl">
+
+     pi_pcl
+
+  </description>
+  <author>patrick</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/pi_pcl</url>
+  <depend package="pcl" />
+  <depend package="pcl_ros" />
+  <depend package="pcl_visualization" />
+  <depend package="eigen" />
+  <depend package="stereo_msgs"/>
+
+  <platform os="ubuntu" version="10.04"/>
+  <platform os="ubuntu" version="10.10"/>
+
+
+</package>
+
+

@@ -1,0 +1,5 @@
+<launch>
+    <node name="ros_face_detect" pkg="opencv_tests" type="rosfacedetect.py">
+       <remap from="/image" to="/camera/rgb/image_color" />
+    </node>
+</launch>

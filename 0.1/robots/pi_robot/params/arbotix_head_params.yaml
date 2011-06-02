@@ -1,0 +1,13 @@
+port: /dev/ttyUSB0
+rate: 10
+baud: 57600
+use_sync: True
+
+dynamixels: {
+    head_pan_joint: {id: 1, max_speed: 180, min_angle: -145, max_angle: 145},
+    head_tilt_joint: {id: 2, max_speed: 180, min_angle: -90, max_angle: 90}
+}
+
+controllers: {
+    joint_controller: {type: joint_controller, joints: [head_pan_joint, head_tilt_joint] }
+}

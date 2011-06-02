@@ -1,0 +1,7 @@
+<launch>
+  <node pkg="demo_markers" name="demo_markers" type="skeleton_markers_from_tf.py" output="screen">
+    <param name="tf_prefix" value="tracker" />
+    <param name="camera_frame_id" value="/kinect_depth_optical_frame" />
+    <rosparam file="$(find demo_markers)/params/marker_params.yaml" command="load" />
+  </node>
+</launch>

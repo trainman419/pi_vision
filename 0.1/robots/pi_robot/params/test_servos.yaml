@@ -1,0 +1,34 @@
+port: /dev/ttyUSB0
+rate: 10
+baud: 1000000
+use_sync: False
+
+dynamixels: {
+    head_pan_joint: {id: 1, max_speed: 360, min_angle: -145, max_angle: 145, invert: False},
+    head_tilt_joint: {id: 2, max_speed: 360, min_angle: -60, max_angle: 80, invert: True},
+    right_shoulder_pan_joint: {id: 3, max_speed: 360, min_angle: -75, max_angle: 80, invert: False},
+    right_shoulder_lift_joint: {id: 4, max_speed: 360, min_angle: -60, max_angle: 80, invert: True},
+    right_arm_roll_joint: {id: 5, max_speed: 360, min_angle: -80, max_angle: 80, invert: True},
+    right_elbow_joint: {id: 13, max_speed: 360, min_angle: -80, max_angle: 80, invert: False},
+    right_wrist_joint: {id: 6, max_speed: 360, min_angle: -80, max_angle: 80, invert: True},
+    left_shoulder_pan_joint: {id: 7, max_speed: 360, min_angle: -75, max_angle: 80, invert: True},
+    left_shoulder_lift_joint: {id: 8, max_speed: 360, min_angle: -60, max_angle: 80, invert: True},
+    left_arm_roll_joint: {id: 9, max_speed: 360, min_angle: -80, max_angle: 80, invert: True},
+    left_elbow_joint: {id: 12, max_speed: 360, min_angle: -80, max_angle: 80, invert: False},
+    left_wrist_joint: {id: 10, max_speed: 360, min_angle: -80, max_angle: 80, invert: True}
+}
+
+controllers: {
+    # Head and Right Arm
+    #joint_controller: {type: joint_controller, joints: [head_pan_joint, head_tilt_joint, right_shoulder_pan_joint, right_shoulder_lift_joint, right_arm_roll_joint, right_elbow_joint, right_wrist_joint] }
+    # Right Arm
+    #joint_controller: {type: joint_controller, joints: [right_shoulder_pan_joint, right_shoulder_lift_joint, right_arm_roll_joint, right_elbow_joint, right_wrist_joint] }
+    # Left Arm
+    #joint_controller: {type: joint_controller, joints: [left_shoulder_pan_joint, left_shoulder_lift_joint, left_arm_roll_joint, left_elbow_joint, left_wrist_joint] }
+    # Both Arms
+    #joint_controller: {type: joint_controller, joints: [right_shoulder_pan_joint, right_shoulder_lift_joint, right_arm_roll_joint, right_elbow_joint, right_wrist_joint, left_shoulder_pan_joint, left_shoulder_lift_joint, left_arm_roll_joint, left_elbow_joint, left_wrist_joint] }
+    # Head Only
+    #joint_controller: {type: joint_controller, joints: [head_pan_joint, head_tilt_joint] }
+    # Head and Both Arms
+    joint_controller: {type: joint_controller, joints: [head_pan_joint, head_tilt_joint, right_shoulder_pan_joint, right_shoulder_lift_joint, right_arm_roll_joint, right_elbow_joint, right_wrist_joint, left_shoulder_pan_joint, left_shoulder_lift_joint, left_arm_roll_joint, left_elbow_joint, left_wrist_joint] }
+}

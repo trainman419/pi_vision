@@ -1,0 +1,22 @@
+<launch>
+  <!-- How to find our package -->
+  <arg name="pkg" value="$(find pi_robot)" />
+  
+  <!-- Make sure we are using real time -->
+  <param name="/use_sim_time" value="False" />
+  
+  <!-- Load the URDF/Xacro model of our robot -->
+  <param name="robot_description" command="$(find xacro)/xacro.py '$(arg pkg)/urdf/pi_robot.urdf.xacro'" />
+
+  <!-- Fire up the joint state publisher in case we want to move the joints around -->
+  <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher">
+    <param name="/use_gui" value="False" />
+    <param name="rate" value="20.0"/>
+  </node>
+  
+  <!-- Launch the robot state publisher -->
+  <node name="robot_state_publisher" pkg="robot_state_publisher" type="state_publisher" >
+    <param name="rate" value="20.0"/>
+  </node>
+    
+</launch>

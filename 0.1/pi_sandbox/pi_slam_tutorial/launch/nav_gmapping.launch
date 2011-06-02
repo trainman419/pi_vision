@@ -1,0 +1,28 @@
+<launch>
+  <!-- A short hand for the current package -->
+  <arg name="pkg" value="$(find pi_slam_tutorial)" />
+
+  <!-- Launch all the commond nodes -->
+ <include file="$(arg pkg)/launch/nav_common.launch" />
+
+  <!-- Run the map server with a blank map -->
+  <node name="map_server" pkg="map_server" type="map_server" args="$(arg pkg)/maps/blank_map.yaml"/>
+
+  <!-- Launch the move_base node -->
+  <include file="$(arg pkg)/launch/move_base.launch" />
+
+  <!-- While not necessary, set a static transform between the /map and /world frames -->
+  <node pkg="tf" type="static_transform_publisher" name="world_map_trans" args="0 0 0 0 0 0 /map /world 100" /> 
+
+  <!-- Fire up gmapping -->	
+  <node name="gmapping" pkg="gmapping" type="slam_gmapping" args="scan:=scan" output="screen">
+    <param name="linearUpdate" value="0.1" />
+    <param name="angularUpdate" value="0.05" />	
+    <param name="xmin" value="-20" />	
+    <param name="ymin" value="-20" />
+    <param name="xmax" value="20" />	
+    <param name="ymax" value="20" />
+    <param name="maxUrange" value="6" />		
+  </node>
+	
+</launch>

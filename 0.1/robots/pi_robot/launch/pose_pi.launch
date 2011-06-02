@@ -1,0 +1,9 @@
+<launch>
+  
+	<node name="arbotix" pkg="arbotix" type="arbotix-node.py" output="screen">
+		<rosparam file="$(find pi_robot)/params/params_arbotix_servos.yaml" command="load" />
+	</node>
+
+    <node name="pose_pi" pkg="pi_robot" type="pose_pi.py" output="screen">
+	</node>
+</launch>

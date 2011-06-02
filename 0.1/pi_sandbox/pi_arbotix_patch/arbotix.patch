@@ -1,0 +1,142 @@
+diff -rupN --exclude=.svn arbotix/bin/arbotix-node.py arbotix-pi/bin/arbotix-node.py
+--- arbotix/bin/arbotix-node.py	2011-01-01 11:20:46.957761851 -0800
++++ arbotix-pi/bin/arbotix-node.py	2011-01-01 11:13:01.841262593 -0800
+@@ -39,8 +39,8 @@ from arbotix.ax12 import *
+ # TODO: generalize these, add init.py in packages
+ from arbotix_sensors.pml import *
+ from arbotix_sensors.v_monitor import *
+-from arbotix_sensors.tilt_stage import *
+-from arbotix_controllers.base_laser_from_tilt import *
++#from arbotix_sensors.tilt_stage import *
++#from arbotix_controllers.base_laser_from_tilt import *
+ from arbotix_controllers.base_controller import *
+ from arbotix_controllers.nuke_controller import *
+ from arbotix_controllers.joint_controller import *
+@@ -63,13 +63,15 @@ class DynamixelServo():
+         self.ticks = 1024                           # adjust for EX-106, etc
+         self.rad_per_tick = radians(300.0)/1024     # adjust for EX-106, etc
+         self.max_angle = radians(150)               # limit angle, radians
+-        self.min_angle = radians(-150)
+-        self.max_speed = radians(1)                 # radians per second
++        self.max_speed = radians(360.0)             # max speed in radians per second
++        self.max_speed_ax12 = radians(684.0)        # From the AX-12+ manual: max speed = 114 rpm - 684 deg/s
++        self.speed_rad_per_tick = self.max_speed_ax12 / 1024
+         self.invert = False
+         self.sync = True
+         self.setParams(params)
+ 
+         self.angle = 0.0                            # current position
++        self.velocity = 0.0                         # current velo
+ 
+         # some callbacks
+         if single:
+@@ -145,6 +147,32 @@ class DynamixelServo():
+ 
+     def getAngleStored(self):
+         return self.angle
++    
++    def setVelocity(self, vel):
++        if vel > self.max_speed:
++            rospy.loginfo("Servo "+self.name+": speed out of range ("+str(vel)+"). Max speed is: " + str(self.max_speed))  
++            vel = self.max_speed
++        self.velocity = vel    # store it for joint state updates
++        ticks = max(1, int(round( vel / self.speed_rad_per_tick ))) # A value of 0 = "fast as you can" so avoid this
++        self.device.setSpeed(self.id, ticks)
++        
++    def getVelocity(self, spd=None):
++        """ Find speed in radians/sec by reading from servo, or
++            by using spd passed in from a sync read.  """
++        if spd == None:
++            spd = self.device.getSpeed(self.id)
++        if spd != -1:
++            velocity = spd *  self.speed_rad_per_tick
++            # Check for erroroneous values.
++            if abs(velocity) >= self.max_speed_ax12:     
++                return self.velocity
++            if self.invert:
++                velocity = velocity * -1.0
++            self.velocity = velocity
++        return self.velocity
++    
++    def getVelocityStored(self):
++        return self.velocity
+ 
+ class HobbyServo(DynamixelServo):
+     """ Class to handle services and updates for a single Hobby Servo, connected to 
+@@ -283,23 +311,30 @@ class ArbotiX_ROS(ArbotiX):
+                 if use_sync: 
+                     # arbotix/servostik/wifi board sync_read
+                     val = self.syncRead(self.sync_servos, P_PRESENT_POSITION_L, 2)
++                    val_spd = self.syncRead(self.sync_servos, P_PRESENT_SPEED_L, 2)
++
+                     if val != None:            
+                         i = 0        
+                         for name in self.sync_names:
+                             msg.name.append(name)
+                             msg.position.append(self.servos[name].getAngle( val[i]+(val[i+1]<<8) ))
++                            msg.velocity.append(self.servos[name].getVelocity( val_spd[i]+(val_spd[i+1]<<8) ))
+                             i = i + 2
+                         for name in self.no_sync_names: 
+                             msg.name.append(name)
+                             msg.position.append(self.servos[name].getAngleStored())
++                            msg.velocity.append(self.servos[name].getVelocityStored())
+                 else:
+                     # direct connection, or other hardware with no sync_read capability
+                     for name in self.sync_names:
+                         msg.name.append(name)
+                         msg.position.append(self.servos[name].getAngle())
++                        msg.velocity.append(self.servos[name].getVelocity())
++
+                     for name in self.no_sync_names: 
+                         msg.name.append(name)
+                         msg.position.append(self.servos[name].getAngleStored())
++                        msg.velocity.append(self.servos[name].getVelocityStored())
+             except:
+                 rospy.loginfo("Error in filling joint_states message")
+     
+diff -rupN --exclude=.svn arbotix/src/arbotix/arbotix.py arbotix-pi/src/arbotix/arbotix.py
+--- arbotix/src/arbotix/arbotix.py	2011-01-01 11:20:46.881261315 -0800
++++ arbotix-pi/src/arbotix/arbotix.py	2011-01-01 11:15:52.933566529 -0800
+@@ -194,6 +194,14 @@ class ArbotiX:
+             return int(values[0]) + (int(values[1])<<8)
+         except:
+             return -1
++        
++    def getSpeed(self, index):
++        """ Returns speed in ticks """
++        values = self.read(index, P_PRESENT_SPEED_L, 2)
++        try:
++            return int(values[0]) + (int(values[1])<<8)
++        except:
++            return -1
+ 
+     def getVoltage(self, index):
+         """ Returns voltage (V). """
+diff -rupN --exclude=.svn arbotix/src/arbotix_controllers/joint_controller.py arbotix-pi/src/arbotix_controllers/joint_controller.py
+--- arbotix/src/arbotix_controllers/joint_controller.py	2011-01-01 11:20:46.945383112 -0800
++++ arbotix-pi/src/arbotix_controllers/joint_controller.py	2011-01-01 11:13:01.841262593 -0800
+@@ -47,12 +47,16 @@ class joint_controller(Thread):
+             self.joints = rospy.get_param("~controllers/"+name+"/joints")
+         else: 
+             # being used as default controller
+-            self.joints = joints        
++            self.joints = joints
++            
++        for joint in self.joints:
++            self.device.servos[joint].setVelocity(0)
+ 
+         # subscriptions
+         rospy.Subscriber('cmd_joints', JointState, self.cmdJointsCb)
+ 
+         rospy.loginfo("Started joint_controller '"+name+"' controlling: " + str(self.joints))
++        
+ 
+     def run(self):
+         """ Simply for compliance with our controller model. """
+@@ -64,4 +68,6 @@ class joint_controller(Thread):
+             if joint in self.joints:            
+                 # TODO: sync this!
+                 self.device.servos[joint].setAngle( msg.position[msg.name.index(joint)] )
++                self.device.servos[joint].setVelocity( msg.velocity[msg.name.index(joint)] )
++
+ 

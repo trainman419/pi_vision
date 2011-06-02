@@ -1,0 +1,28 @@
+<launch>
+  <node pkg="pi_opencv" name="patch_tracker" type="patch_tracker.py" output="screen">
+    <rosparam>
+      input_image: /camera/rgb/image_color
+      depth_image: camera/depth/image
+      flip_image: False
+      do_face_tracking: True
+      detect_face_only: False
+      use_depth_for_detection: True
+      use_depth_for_tracking: False
+      min_features: 50
+      abs_min_features: 6
+    </rosparam>
+    
+  	<param name="cascade_frontal_alt" value="$(find pi_opencv)/params/haarcascade_frontalface_alt.xml" />
+   	<param name="cascade_frontal_alt2" value="$(find pi_opencv)/params/haarcascade_frontalface_alt2.xml" />
+  	<param name="cascade_profile" value="$(find pi_opencv)/params/haarcascade_profileface.xml" />
+  	
+  	<!--
+    <rosparam>
+      input_image: /camera/image_raw
+      flip_image: True
+      do_face_tracking: True
+    </rosparam>
+    -->
+
+  </node>
+</launch>
