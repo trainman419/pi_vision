@@ -45,8 +45,8 @@ class ROS2OpenCV:
         rospy.on_shutdown(self.cleanup)
         
         self.node_name = node_name
-        self.input_rgb = "input_rgb"
-        self.input_depth = "input_depth"
+        self.input_rgb_image = "input_rgb_image"
+        self.input_depth_image = "input_depth_image"
         self.flip_image = rospy.get_param("~flip_image", False)
         self.show_text = rospy.get_param("~show_text", True)
         self.show_features = rospy.get_param("~show_features", True)
@@ -85,8 +85,8 @@ class ROS2OpenCV:
         cv.SetMouseCallback (self.node_name, self.on_mouse_click, None)
         
         """ Subscribe to the raw camera image topic and set the image processing callback """
-        self.image_sub = rospy.Subscriber(self.input_rgb, Image, self.image_callback)
-        self.depth_sub = rospy.Subscriber(self.input_depth, Image, self.depth_callback)
+        self.image_sub = rospy.Subscriber(self.input_rgb_image, Image, self.image_callback)
+        self.depth_sub = rospy.Subscriber(self.input_depth_image, Image, self.depth_callback)
         
         rospy.loginfo("Starting " + self.node_name)
         

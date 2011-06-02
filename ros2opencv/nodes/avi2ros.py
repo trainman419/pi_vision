@@ -2,7 +2,7 @@
 
 """ avi2ros.py - Version 0.1 2011-04-28
 
-    Read in an AVI video file and republish on the /camera/image_raw topic.
+    Read in an AVI video file and republish as a ROS Image topic.
     
     Created for the Pi Robot Project: http://www.pirobot.org
     Copyright (c) 2011 Patrick Goebel.  All rights reserved.
@@ -35,9 +35,7 @@ class AVI2ROS:
         rospy.init_node('avi2ros', anonymous=True)
         
         self.input = rospy.get_param("~input", "")
-        self.output = rospy.get_param("~output", "/camera/image_raw")
-        
-        image_pub = rospy.Publisher(self.output, Image)
+        image_pub = rospy.Publisher("output", Image)
         
         rospy.on_shutdown(self.cleanup)
         

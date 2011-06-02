@@ -1,7 +1,7 @@
 <launch>
   <node pkg="pi_face_tracker" name="face_tracker_kinect" type="face_tracker.py" output="screen">
-    <remap from="input_rgb" to="/camera/rgb/image_color" />
-    <remap from="input_depth" to="/camera/depth/image" />
+    <remap from="input_rgb_image" to="/camera/rgb/image_color" />
+    <remap from="input_depth_image" to="/camera/depth/image" />
     
     <rosparam>
       flip_image: False

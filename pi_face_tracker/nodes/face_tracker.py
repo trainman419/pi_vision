@@ -40,51 +40,22 @@ class PatchTracker(ROS2OpenCV):
     def __init__(self, node_name):
         ROS2OpenCV.__init__(self, node_name)
         
-        self.node_name = node_name
+        self.node_name = node_name       
         
-        # Do automatic face tracking?
         self.auto_face_tracking = rospy.get_param("~auto_face_tracking", True)
-
-        # For face tracking, use only the OpenCV Haar face detector?
         self.use_haar_only = rospy.get_param("~use_haar_only", False)
-        
-        # Should we use depth information for detection?
         self.use_depth_for_detection = rospy.get_param("~use_depth_for_detection", False)
-        
-        # Width and height in radians of the camera's field of view (FOV)
-        self.fov_width = rospy.get_param("~fov_width", 1.094) # The Kinect's FOV is 62.7 degrees for the RGB image.
+        self.fov_width = rospy.get_param("~fov_width", 1.094)
         self.fov_height = rospy.get_param("~fov_height", 1.094)
-        
-        # What is the maximum size (in meters) we will accept for a face detection?
         self.max_face_size = rospy.get_param("~max_face_size", 0.28)
-
-        # Should we use depth information for tracking?
         self.use_depth_for_tracking = rospy.get_param("~use_depth_for_tracking", False)
-        
-        # What is the minimum number of feature we will accept before expanding the track window?
-        # Use 50 for a 640x480 image, or 25 for a 320x240 image 
-        self.min_features = rospy.get_param("~min_features", 50)
-        
-        # Alternatively, automatically track the number of features found in the intial detection window 
         self.auto_min_features = rospy.get_param("~auto_min_features", True)
-        
-        # What is the smallest number of features we will accept before returning to
-        # the detector to get a fresh patch?
+        self.min_features = rospy.get_param("~min_features", 50) # Used only if auto_min_features is False
         self.abs_min_features = rospy.get_param("~abs_min_features", 6)
-        
-        # At what standard error do we drop feature points from the tracked cluster? 
         self.std_err_xy = rospy.get_param("~std_err_xy", 2.5) 
-
-        # At what total MSE over the cluster do we go back to the detector?
         self.max_mse = rospy.get_param("~max_mse", 10000)
-        
-        # Minimum pixel distance for Good Features to Track
         self.good_feature_distance = rospy.get_param("~good_feature_distance", 5)
-        
-        # Minimum pixel distance for adding features during expansion
         self.add_feature_distance = rospy.get_param("~add_feature_distance", 10)
-        
-        # How much should we expand the track box when the number of features falls below threshold?
         self.expand_scale = 1.1 
             
         self.detect_box = None
@@ -120,10 +91,10 @@ class PatchTracker(ROS2OpenCV):
         self.flags = 0
         
         """ Wait until the image topics are ready before starting """
-        rospy.wait_for_message(self.input_rgb, Image)
+        rospy.wait_for_message(self.input_rgb_image, Image)
         
         if self.use_depth_for_detection or self.use_depth_for_tracking:
-            rospy.wait_for_message(self.input_depth, Image)
+            rospy.wait_for_message(self.input_depth_image, Image)
         
     def process_image(self, cv_image):
         """ If parameter use_haar_only is True, use only the OpenCV Haar detector to track the face """
