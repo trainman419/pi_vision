@@ -118,15 +118,14 @@ class PatchTracker(ROS2OpenCV):
                         self.detect_box = None
                         self.track_box = None
                         return cv_image
-                
+                                    
                 """ Add features if the number is getting too low """
                 if len(self.features) < self.min_features:
                     self.expand_scale = 1.1 * self.expand_scale
                     self.add_features(cv_image)
                 else:
                     self.expand_scale = 1.1
-
-        
+ 
             else:
                 self.features = []
                 self.track_box = None
@@ -377,11 +376,9 @@ class PatchTracker(ROS2OpenCV):
         self.quality, self.good_feature_distance, mask=roi, blockSize=3, useHarris=0, k=0.04)
                 
         """ Append new features to the current list """
-        i = 0
         for new_feature in features:
             if self.distance_to_cluster(new_feature, self.features) > self.add_feature_distance:
                 self.features.append(new_feature)
-                i = i + 1
                 
         """ Remove duplicate features """
         self.features = list(set(self.features))
@@ -389,6 +386,8 @@ class PatchTracker(ROS2OpenCV):
     def distance_to_cluster(self, test_point, cluster):
         min_distance = 10000
         for point in cluster:
+            if point == test_point:
+                continue
             distance = abs(test_point[0] - point[0])  + abs(test_point[1] - point[1])
             if distance < min_distance:
                 min_distance = distance
@@ -422,6 +421,18 @@ class PatchTracker(ROS2OpenCV):
         mean_x = sum_x / n_xy
         mean_y = sum_y / n_xy
         
+        """ Compute the x-y MSE (mean squared error) of the cluster in the camera plane """
+        for point in self.features:
+            sse = sse + (point[0] - mean_x) * (point[0] - mean_x) + (point[1] - mean_y) * (point[1] - mean_y)
+        
+        """ Get the average over the number of feature points """
+        mse_xy = sse / n_xy
+        
+        """ The MSE must be > 0 for any sensible feature cluster """
+        if mse_xy == 0 or mse_xy > mse_threshold:
+            return ((0, 0, 0), 0, 0, -1)
+        
+        """ If using depth for tracking ... """
         if self.use_depth_for_tracking:
             for point in self.features:
                 try:
@@ -443,30 +454,16 @@ class PatchTracker(ROS2OpenCV):
         else:
             mean_z = -1
         
-        """ Compute the x-y MSE (mean squared error) of the cluster in the camera plane """
-        for point in self.features:
-            sse = sse + (point[0] - mean_x) * (point[0] - mean_x) + (point[1] - mean_y) * (point[1] - mean_y)
-        
-        """ Get the average over the number of feature points """
-        mse_xy = sse / n_xy
-        
-        """ The MSE must be > 0 for any sensible feature cluster """
-        if mse_xy == 0 or mse_xy > mse_threshold:
-            return ((0, 0, 0), 0, 0, -1)
-        
         """ Throw away the outliers based on the x-y variance """
         for point in self.features:
-            std_err = ((point[0] - mean_x) * (point[0] - mean_x) + (point[1] - mean_y) * (point[1] - mean_y)) / mse_xy 
+            std_err = ((point[0] - mean_x) * (point[0] - mean_x) + (point[1] - mean_y) * (point[1] - mean_y)) / mse_xy
             if std_err > outlier_threshold:
                 features_xy.remove(point)
-                #rospy.loginfo("Dropping XY point at std_err: " + str(std_err))
                 try:
                 	features_z.remove(point)
                 	n_z = n_z - 1
                 except:
                 	pass
-                
-                n_xy = n_xy - 1
                 
         """ Now do the same for depth """
         if self.use_depth_for_tracking:
@@ -484,23 +481,23 @@ class PatchTracker(ROS2OpenCV):
                 z = z[0]
                 try:
                     pct_err = abs(z - mean_z) / mean_z
-                    #std_err = (z - mean_z) * (z - mean_z) / mse_z
                     if pct_err > 0.5:
                         features_xy.remove(point)
-                        #rospy.loginfo("Dropping Z pct_err: " + str(pct_err) + ", Z: " + str(z) + ", mean_z: " + str(mean_z))
                 except:
                     pass
         else:
             mse_z = -1
         
+        """ Set the global feature array to what is left """
         self.features = features_xy
+        self.features = list(set(self.features))
                
         """ Consider a cluster bad if we have fewer than abs_min_features left """
         if len(self.features) < self.abs_min_features:
             score = -1
         else:
             score = 1
-                
+        
         return ((mean_x, mean_y, mean_z), mse_xy, mse_z, score)        
 
 def main(args):

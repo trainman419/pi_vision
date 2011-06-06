@@ -12,7 +12,7 @@
       abs_min_features: 6
       good_feature_distance: 8
       add_feature_distance: 10
-      std_err_xy: 2.5
+      std_err_xy: 3.0
       std_err_z: 1.0
       max_mse: 100000
       show_text: True
