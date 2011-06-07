@@ -217,6 +217,8 @@ class PatchTracker(ROS2OpenCV):
             return face_box
 
     def track_lk(self, cv_image):
+        feature_box = None
+        
         """ Initialize intermediate images if necessary """
         if not self.pyramid:
             self.grey = cv.CreateImage(cv.GetSize (cv_image), 8, 1)
@@ -328,14 +330,14 @@ class PatchTracker(ROS2OpenCV):
     
             if feature_box and not self.drag_start and self.is_rect_nonzero(self.track_box):
                 self.ROI = RegionOfInterest()
-                self.ROI.x_offset = int(roi_center[0] - roi_size[0] / 2)
-                self.ROI.y_offset = int(roi_center[1] - roi_size[1] / 2)
-                self.ROI.width = int(roi_size[0])
-                self.ROI.height = int(roi_size[1])
+                self.ROI.x_offset = min(self.image_size[0], max(0, int(roi_center[0] - roi_size[0] / 2)))
+                self.ROI.y_offset = min(self.image_size[1], max(0, int(roi_center[1] - roi_size[1] / 2)))
+                self.ROI.width = min(self.image_size[0], int(roi_size[0]))
+                self.ROI.height = min(self.image_size[1], int(roi_size[1]))
                 
             self.pubROI.publish(self.ROI)
             
-        if feature_box is not None and len(self.features) > 0:
+        if feature_box and len(self.features) > 0:
             return feature_box
         else:
             return None
