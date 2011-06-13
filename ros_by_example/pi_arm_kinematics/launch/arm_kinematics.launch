@@ -1,0 +1,12 @@
+<launch>
+
+	<arg name="left_right" value="left" />
+
+    <node name="$(arg left_right)_arm_kinematics" pkg="arm_kinematics" type="arm_kinematics" output="screen">
+		<param name="root_name" value="left_shoulder_link" />
+		<param name="tip_name" value="left_finger_link" />
+	</node>
+		
+	<node pkg="tf" type="static_transform_publisher" name="base_world_broadcaster" args="0 0 0 0 0 0 /base_link /world 100" />
+	
+</launch>

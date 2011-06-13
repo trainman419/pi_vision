@@ -1,0 +1,7 @@
+<launch>
+  <node name="recognizer" pkg="pi_speech" type="recognizer.py">
+    <param name="lm" value="$(find pi_speech)/params/test_fsg/nav_test.lm"/>
+    <param name="dict" value="$(find pi_speech)/params/test_fsg/nav_test.dic"/>
+    <param name="fsg" value="$(find pi_speech)/params/test_fsg/nav_test.fsg"/>
+  </node>
+</launch>

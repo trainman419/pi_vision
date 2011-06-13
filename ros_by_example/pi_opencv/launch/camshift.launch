@@ -1,0 +1,9 @@
+<launch>
+  <node pkg="pi_opencv" name="camshift" type="camshift.py" output="screen">
+
+  	<param name="input_image" value="/camera/rgb/image_color" />
+  <!--
+  	<param name="input_image" value="/camera/image_raw" />
+-->
+  </node>
+</launch>

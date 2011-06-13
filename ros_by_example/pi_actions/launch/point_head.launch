@@ -1,0 +1,16 @@
+<launch>
+	<!-- Load the robot model -->
+	<include file="$(find pi_description)/launch/urdf.launch" />
+	
+	<!-- Fire up the ArbotiX servo controller for just the pan and tilt head joints -->
+	<include file="$(find pi_arbotix)/launch/head_only.launch" />
+	
+	<!-- Bring up the point_head node -->
+    <node name="point_head_node" pkg="pi_actions" type="point_head.py" output="screen" />
+    
+	<!-- Publish a static transform between the robot base and the world frame -->
+	<node pkg="tf" type="static_transform_publisher" name="world_base_broadcaster" args="0 0 0.0325 0 0 0 /world /base_link 100" />
+	
+	<!-- Bring up the head pointer GUI -->
+    <node name="head_pointer_gui" pkg="pi_actions" type="head_pointer_gui.py" output="screen" />
+</launch>

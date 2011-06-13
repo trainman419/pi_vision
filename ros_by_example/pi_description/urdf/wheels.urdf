@@ -1,0 +1,294 @@
+<?xml version="1.0"?>
+ <robot name="AL-101 Base">
+ <link name="base_link">
+   <visual>
+     <geometry>
+       <box size=".01 .37 .47"/>
+     </geometry>
+     <origin rpy="0 1.57075 0" xyz="0 -0.085 0.16"/>
+     <material name="grey">
+       <color rgba=".7 .7 .7 1"/>
+     </material>
+   </visual>
+   <collision>
+     <geometry>
+       <box size=".01 .37 .47"/>
+       <origin rpy="0 1.57075 0" xyz="0 -0.085 0.16"/>
+     </geometry>
+   </collision>
+ </link>
+ <link name="left_wheel">
+   <visual>
+     <geometry>
+       <cylinder length=".035" radius="0.075"/>
+     </geometry>
+     <material name="black">
+       <color rgba=".1 .1 .1 1"/>
+     </material>
+   </visual>
+   <collision>
+     <geometry>
+       <cylinder length=".035" radius="0.075"/>
+     </geometry>
+   </collision>
+ </link>
+ <joint name="left_wheel_joint" type="fixed">
+   <parent link="base_link"/>
+   <child link="left_wheel"/>
+   <origin rpy="0 1.57075 0" xyz="-0.215 0.0 0.075"/>
+ </joint>
+ <link name="left_wheel_inner">
+   <visual>
+     <geometry>
+       <cylinder length=".0351" radius="0.0475"/>
+     </geometry>
+     <material name="white">
+       <color rgba=".95 .95 .95 1"/>
+     </material>
+   </visual>
+ </link>
+ <joint name="left_wheel_inner_joint" type="fixed">
+   <parent link="left_wheel"/>
+   <child link="left_wheel_inner"/>
+   <origin rpy="0 0 0" xyz="0 0 0"/>
+ </joint>
+ <link name="left_wheel_support">
+   <visual>
+     <geometry>
+       <box size="0.1 0.09 0.005"/>
+     </geometry>
+     <material name="grey"/>
+   </visual>
+ </link>
+ <joint name="left_wheel_support_joint" type="fixed">
+   <parent link="left_wheel"/>
+   <child link="left_wheel_support"/>
+   <origin rpy="0 0 0" xyz="-0.025 0 0.02"/>
+ </joint>
+ <link name="left_motor">
+   <visual>
+     <geometry>
+       <cylinder length=".11" radius="0.025"/>
+     </geometry>
+     <material name="steel">
+       <color rgba=".85 .85 .85 1"/>
+     </material>
+   </visual>
+   <collision>
+     <geometry>
+       <cylinder length=".11" radius="0.025"/>
+     </geometry>
+   </collision>
+ </link>
+ <joint name="left_motor_joint" type="fixed">
+   <parent link="left_wheel_inner"/>
+   <child link="left_motor"/>
+   <origin rpy="0 0 0" xyz="0 0 0.08"/>
+ </joint>
+ <link name="left_axel">
+   <visual>
+     <geometry>
+       <cylinder length=".04" radius="0.006"/>
+     </geometry>
+     <material name="axel">
+       <color rgba=".6 .6 .6 1"/>
+     </material>
+   </visual>
+ </link>
+ <joint name="left_axel" type="fixed">
+   <parent link="left_wheel_inner"/>
+   <child link="left_axel"/>
+   <origin rpy="0 0 0" xyz="0 0 0"/>
+ </joint>
+ <link name="right_wheel">
+   <visual>
+     <geometry>
+       <cylinder length=".035" radius="0.075"/>
+     </geometry>
+     <material name="black"/>
+   </visual>
+   <collision>
+     <geometry>
+       <cylinder length=".035" radius="0.075"/>
+     </geometry>
+   </collision>
+ </link>
+ <joint name="right_wheel_joint" type="fixed">
+   <parent link="base_link"/>
+   <child link="right_wheel"/>
+   <origin rpy="0 1.57075 0" xyz="0.215 0.0 0.075"/>
+ </joint>
+ <link name="right_wheel_inner">
+   <visual>
+     <geometry>
+       <cylinder length=".0351" radius="0.0475"/>
+     </geometry>
+     <material name="white"/>
+   </visual>
+ </link>
+ <joint name="right_wheel_inner_joint" type="fixed">
+   <parent link="right_wheel"/>
+   <child link="right_wheel_inner"/>
+   <origin rpy="0 0 0" xyz="0 0 0"/>
+ </joint>
+ <link name="right_wheel_support">
+   <visual>
+     <geometry>
+       <box size="0.1 0.09 0.005"/>
+     </geometry>
+     <material name="grey"/>
+   </visual>
+ </link>
+ <joint name="right_wheel_support_joint" type="fixed">
+   <parent link="right_wheel"/>
+   <child link="right_wheel_support"/>
+   <origin rpy="0 0 0" xyz="-0.025 0 -0.02"/>
+ </joint>
+ <link name="right_motor">
+   <visual>
+     <geometry>
+       <cylinder length=".11" radius="0.025"/>
+     </geometry>
+     <material name="steel"/>
+   </visual>
+   <collision>
+     <geometry>
+       <cylinder length=".11" radius="0.025"/>
+     </geometry>
+   </collision>
+ </link>
+ <joint name="right_motor_joint" type="fixed">
+   <parent link="right_wheel_inner"/>
+   <child link="right_motor"/>
+   <origin rpy="0 0 0" xyz="0 0 -0.08"/>
+ </joint>
+ <link name="right_axel">
+   <visual>
+     <geometry>
+       <cylinder length=".04" radius="0.006"/>
+     </geometry>
+     <material name="axel"/>
+   </visual>
+ </link>
+ <joint name="right_axel" type="fixed">
+   <parent link="right_wheel_inner"/>
+   <child link="right_axel"/>
+   <origin rpy="0 0 0" xyz="0 0 0"/>
+ </joint>
+ <link name="castor">
+   <visual>
+     <geometry>
+       <cylinder length=".02" radius="0.035"/>
+     </geometry>
+     <material name="black"/>
+   </visual>
+   <collision>
+     <geometry>
+       <cylinder length=".02" radius="0.035"/>
+     </geometry>
+   </collision>
+ </link>
+ <joint name="castor_joint" type="fixed">
+   <parent link="base_link"/>
+   <child link="castor"/>
+   <origin rpy="0 1.57075 0" xyz="0 -0.235 0.035"/>
+ </joint>
+ <link name="castor_stand">
+   <visual>
+     <geometry>
+       <box size=".001 .065 .065"/>
+     </geometry>
+     <material name="grey"/>
+   </visual>
+   <collision>
+     <geometry>
+       <box size=".001 .065 .065"/>
+     </geometry>
+   </collision>
+ </link>
+ <joint name="castor_stand_joint" type="fixed">
+   <parent link="base_link"/>
+   <child link="castor_stand"/>
+   <origin rpy="0 1.57075 0" xyz="0 -0.235 0.09"/>
+ </joint>
+ <link name="castor_stand_support1">
+   <visual>
+     <geometry>
+       <cylinder length="0.065" radius="0.005"/>
+     </geometry>
+     <origin rpy="0 0 0" xyz="-0.028 -0.028 0"/>
+     <material name="grey"/>
+   </visual>
+   <collision>
+     <geometry>
+       <cylinder length="0.065" radius="0.005"/>
+     </geometry>
+     <origin rpy="0 0 0" xyz="-0.028 -0.028 0"/>
+   </collision>
+ </link>
+ <joint name="castor_stand_support1_joint" type="fixed">
+   <parent link="base_link"/>
+   <child link="castor_stand_support1"/>
+   <origin rpy="0 0 0" xyz="0 -0.235 0.1225"/>
+ </joint>
+ <link name="castor_stand_support2">
+   <visual>
+     <geometry>
+       <cylinder length="0.065" radius="0.005"/>
+     </geometry>
+     <origin rpy="0 0 0" xyz="-0.028 0.028 0"/>
+     <material name="grey"/>
+   </visual>
+   <collision>
+     <geometry>
+       <cylinder length="0.065" radius="0.005"/>
+     </geometry>
+     <origin rpy="0 0 0" xyz="-0.028 0.028 0"/>
+   </collision>
+ </link>
+ <joint name="castor_stand_support2_joint" type="fixed">
+   <parent link="base_link"/>
+   <child link="castor_stand_support2"/>
+   <origin rpy="0 0 0" xyz="0 -0.235 0.1225"/>
+ </joint>
+ <link name="castor_stand_support3">
+   <visual>
+     <geometry>
+       <cylinder length="0.065" radius="0.005"/>
+     </geometry>
+     <origin rpy="0 0 0" xyz="0.028 -0.028 0"/>
+     <material name="grey"/>
+   </visual>
+   <collision>
+     <geometry>
+       <cylinder length="0.065" radius="0.005"/>
+     </geometry>
+     <origin rpy="0 0 0" xyz="0.028 -0.028 0"/>
+   </collision>
+ </link>
+ <joint name="castor_stand_support3_joint" type="fixed">
+   <parent link="base_link"/>
+   <child link="castor_stand_support3"/>
+   <origin rpy="0 0 0" xyz="0 -0.235 0.1225"/>
+ </joint>
+ <link name="castor_stand_support4">
+   <visual>
+     <geometry>
+       <cylinder length="0.065" radius="0.005"/>
+     </geometry>
+     <origin rpy="0 0 0" xyz="0.028 0.028 0"/>
+     <material name="grey"/>
+   </visual>
+   <collision>
+     <geometry>
+       <cylinder length="0.065" radius="0.005"/>
+     </geometry>
+     <origin rpy="0 0 0" xyz="0.028 0.028 0"/>
+   </collision>
+ </link>
+ <joint name="castor_stand_support4_joint" type="fixed">
+   <parent link="base_link"/>
+   <child link="castor_stand_support4"/>
+   <origin rpy="0 0 0" xyz="0 -0.235 0.1225"/>
+ </joint>
+ </robot>

@@ -1,0 +1,18 @@
+<package>
+  <description brief="pi_speech">
+
+     pi_speech
+
+  </description>
+  <author>patrick</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/pi_speech</url>
+  <depend package="roscpp"/>
+  <depend package="rospy"/>
+  <depend package="pocketsphinx"/>
+  <depend package="sound_play"/>
+  <depend package="std_msgs"/>
+</package>
+
+

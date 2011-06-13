@@ -1,0 +1,8 @@
+<launch>
+  <include file="$(find ros2opencv)/launch/openni_node.launch" />
+  <include file="$(find pi_arbotix)/launch/head_only.launch" />
+  <include file="$(find pi_actions)/launch/head_track_traj.launch" />
+  <include file="$(find pi_face_tracker)/launch/face_tracker_kinect.launch" />
+</launch>
+
+
