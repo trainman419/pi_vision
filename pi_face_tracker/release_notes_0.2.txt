@@ -1,7 +1,0 @@
-Release Notes for Version 0.2
-
-* Added new parameter "feature_type" which can be set to 0 for Good Features To Track (default) or 1 for SURF features.
-
-* Added new parameter "use_depth_for_tracking" which causes points to be pruned if their depth value is too far from the currently tracked cloud.
-
-* Changed mask shape from ellipse to rectangle for manually-selected regions; i.e. ellipse-shaped mask only used when parameter auto_face_tracking is set to True.
