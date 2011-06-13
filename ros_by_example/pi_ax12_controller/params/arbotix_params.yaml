@@ -1,9 +1,0 @@
-port: /dev/usb2dynamixel
-baud: 1000000
-rate: 20
-use_sync: True
-
-dynamixels: {
-    head_pan_joint: {id: 1, max_speed: 360, min_angle: -360, max_angle: 360, invert: False},
-    head_tilt_joint: {id: 2, max_speed: 360, min_angle: -360, max_angle: 360, invert: True}
-}

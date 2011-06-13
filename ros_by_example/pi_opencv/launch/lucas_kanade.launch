@@ -1,5 +1,0 @@
-<launch>
-  <node pkg="pi_opencv" name="lucas_kanade" type="lucas_kanade.py" output="screen">
-  	<param name="input_image" value="/camera/rgb/image_color" />
-  </node>
-</launch>

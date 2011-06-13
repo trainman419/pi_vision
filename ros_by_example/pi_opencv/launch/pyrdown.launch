@@ -1,5 +1,0 @@
-<launch>
-  <node pkg="pi_opencv" name="pyrdown" type="pyrdown.py" output="screen">
-  	<param name="image_topic" value="/camera/rgb/image_color" />
-  </node>
-</launch>

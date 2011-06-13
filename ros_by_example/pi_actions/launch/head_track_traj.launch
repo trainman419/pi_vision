@@ -1,4 +1,0 @@
-<launch>
-	<node name="head_track_traj" pkg="pi_actions" type="head_track_traj.py">
-	</node>
-</launch>
