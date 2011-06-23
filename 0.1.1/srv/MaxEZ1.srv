@@ -1,0 +1,5 @@
+uint8 trigger_pin
+uint8 output_pin
+bool cached
+---
+float32 value

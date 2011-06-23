@@ -1,0 +1,52 @@
+/**
+\mainpage
+\htmlinclude manifest.html
+
+\b The Serializer microcontroller made by the Robotics Connection ... 
+
+<!-- 
+Provide an overview of your package.
+-->
+
+<!-- Documentation:
+
+	UNITS = 0                   # 1 is inches, 0 is metric (cm for sensors, meters for wheels measurements) and 2 is "raw"
+    WHEEL_DIAMETER = 0.132      # meters (5.0 inches) meters or inches depending on UNITS
+    WHEEL_TRACK = 0.3365        # meters (12.8 inches) meters or inches units depending on UNITS
+    ENCODER_RESOLUTION = 624    # encoder ticks per revolution of the wheel without external gears
+    GEAR_REDUCTION = 1.667      # This is for external gearing if you have any.  In this case there is a 60/36 tooth gear ratio.
+    
+    ENCODER_TYPE = 1            # 1 = quadrature, 0 = single
+    MOTORS_REVERSED = True      # Multiplies encoder counts by -1 if the motor rotation direction is reversed.
+
+    INIT_PID = True # Set to True if you want to update UNITS, VPID and DPID parameters.  Otherwise, those stored in the Serializer's firmware are used.**
+
+    VPID_P = 2   # Proportional
+    VPID_I = 0   # Integral
+    VPID_D = 5   # Derivative                                                                               
+    VPID_L = 45  # Loop: this together with UNITS and WHEEL_DIAMETER determines real-world velocity
+    
+    DPID_P = 1   # Proportional
+    DPID_I = 0   # Integral
+    DPID_D = 0   # Derivative 
+    DPID_A = 5   # Acceleration
+    DPID_B = 10  # Dead band
+
+-->
+
+
+\section codeapi Code API
+
+<!--
+Provide links to specific auto-generated API documentation within your
+package that is of particular interest to a reader. Doxygen will
+document pretty much every part of your code, so do your best here to
+point the reader to the actual API.
+
+If your codebase is fairly large or has different sets of APIs, you
+should use the doxygen 'group' tag to keep these APIs together. For
+example, the roscpp documentation has 'libros' group.
+-->
+
+
+*/
